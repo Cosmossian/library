@@ -333,6 +333,17 @@ function fmtDay(s, withYear){
   const y = withYear || d.getFullYear() !== new Date().getFullYear();
   return MONTHS[d.getMonth()] + " " + d.getDate() + (y ? ", " + d.getFullYear() : "");
 }
+// Finish dates can be exact (finishedPrec "day", the default), just a month ("month", stored as YYYY-MM-01)
+// or just a year ("year", stored as YYYY-01-01). needsDate = finished books added before dates were asked for properly.
+function precOf(b){ return b.finishedPrec === "month" || b.finishedPrec === "year" ? b.finishedPrec : "day"; }
+function fmtFinished(b, long){
+  if (!b.finished) return "";
+  if (b.needsDate) return "date not set";
+  const d = parseDay(b.finished), p = precOf(b);
+  if (p === "year") return String(d.getFullYear());
+  if (p === "month") return (long ? MONTHS_LONG : MONTHS)[d.getMonth()] + " " + d.getFullYear();
+  return fmtDay(b.finished);
+}
 function fmtTime(iso){ const d = new Date(iso); let h = d.getHours(); const ap = h < 12 ? "am" : "pm"; h = h % 12 || 12; return h + ":" + pad(d.getMinutes()) + " " + ap; }
 function fmtDur(min){
   min = Math.round(min || 0);
@@ -377,7 +388,8 @@ function bookStats(b){
   const minutes = ss.reduce((a, s) => a + sessMin(s), 0);
   const pph = b.format === "audio" ? null : speedOf(ss);
   let days = null;
-  if (b.started){ const end = (b.status === "finished" || b.status === "dnf") && b.finished ? b.finished : todayKey(); days = daysBetween(b.started, end) + 1; }
+  const done = b.status === "finished" || b.status === "dnf";
+  if (b.started && (!done || (b.finished && precOf(b) === "day" && !b.needsDate))){ days = daysBetween(b.started, done ? b.finished : todayKey()) + 1; }
   const left = b.pages ? Math.max(0, Number(b.pages) - currentPage(b)) : null;
   return {ss, minutes, pph, days, left, ch: chapterStats(b)};
 }
@@ -432,14 +444,14 @@ function yearStats(Y){
   const pagesFin = fin.reduce((a, b) => a + (Number(b.pages) || 0), 0);
   const pph = speedOf(sess.filter(x => x.b.format !== "audio").map(x => x.s));
   const byMonth = Array(12).fill(0), minByMonth = Array(12).fill(0);
-  fin.forEach(b => byMonth[parseDay(b.finished).getMonth()]++);
+  fin.forEach(b => { if (precOf(b) !== "year" && !b.needsDate) byMonth[parseDay(b.finished).getMonth()]++; });
   sess.forEach(x => minByMonth[new Date(x.s.start).getMonth()] += sessMin(x.s));
   const dayset = new Set(sess.map(x => dayKey(x.s.start)));
   const streak = longestStreak(dayset);
   const dow = Array(7).fill(0); sess.forEach(x => dow[new Date(x.s.start).getDay()] += sessMin(x.s));
   const tod = {morning: 0, afternoon: 0, evening: 0, night: 0};
   sess.forEach(x => { const h = new Date(x.s.start).getHours(); tod[h >= 5 && h < 12 ? "morning" : h < 17 && h >= 12 ? "afternoon" : h >= 17 && h < 21 ? "evening" : "night"] += sessMin(x.s); });
-  const withDays = fin.filter(b => b.started).map(b => ({b, days: daysBetween(b.started, b.finished) + 1})).filter(x => x.days > 0);
+  const withDays = fin.map(b => ({b, days: b.status === "finished" ? bookStats(b).days : null})).filter(x => x.days > 0);
   const fastest = withDays.slice().sort((a, b) => a.days - b.days || (Number(b.b.pages) || 0) - (Number(a.b.pages) || 0))[0] || null;
   const slowest = withDays.slice().sort((a, b) => b.days - a.days)[0] || null;
   const longest = fin.filter(b => Number(b.pages) > 0).sort((a, b) => b.pages - a.pages)[0] || null;
@@ -461,7 +473,20 @@ function yearStats(Y){
    ============================================================ */
 let saveTimers = {};
 function setBooks(list){ state.books = list.map(normalize); }
-function normalize(b){ b = Object.assign({}, b); b.sessions = Array.isArray(b.sessions) ? b.sessions : []; b.status = STATUS[b.status] ? b.status : "want"; return b; }
+function normalize(b){
+  b = Object.assign({}, b); b.sessions = Array.isArray(b.sessions) ? b.sessions : []; b.status = STATUS[b.status] ? b.status : "want";
+  // The first add form filled Started and Finished with the day the book was added, so finished books
+  // added after the fact showed "1 day". Those dates weren't real: clear them and ask for the month instead.
+  if ((b.status === "finished" || b.status === "dnf") && !b.finishedPrec && !b.datesChecked && !b.sessions.length &&
+      b.started && b.started === b.finished && b.added && dayKey(b.added) === b.finished){
+    b.started = null; b.finishedPrec = "year"; b.needsDate = true; b.datesChecked = true; b._migrated = true;
+  }
+  return b;
+}
+function saveMigrated(){
+  const list = state.books.filter(b => b._migrated);
+  list.forEach(b => { delete b._migrated; saveBook(b, true); });
+}
 function cacheNow(){ lsSet(cacheKey(), state.books); }
 function bookById(id){ return state.books.find(b => b.id === id); }
 function rowOf(b){ const data = Object.assign({}, b); delete data.id; return {id: b.id, data, updated_at: new Date().toISOString()}; }
@@ -529,6 +554,7 @@ async function fetchBooks(){
     state.books.forEach(b => { if (pending.has(b.id) && !merged.find(x => x.id === b.id)) merged.push(b); });
     setBooks(merged);
     cacheNow();
+    saveMigrated();
     await adoptLocalBooks();
     render();
     flushQueue();
@@ -585,6 +611,7 @@ function setSession(session){
 function startLocal(noDb){
   state.mode = "local"; state.noDb = !!noDb;
   setBooks(lsGet("library-books", []));
+  saveMigrated();
   render();
 }
 function loginEmail(s){ s = s.trim(); return s.includes("@") ? s : s.toLowerCase() + KIDS_DOMAIN; }
@@ -633,6 +660,7 @@ function route(){
   const h = location.hash.replace(/^#\/?/, "");
   const parts = h.split("/").filter(Boolean);
   if (parts[0] === "book" && parts[1]) return {view: "book", id: parts[1]};
+  if (parts[0] === "dates") return {view: "dates"};
   if (parts[0] === "review") return {view: parts[2] === "all" ? "yearall" : "review", year: Number(parts[1]) || new Date().getFullYear()};
   return {view: "shelf"};
 }
@@ -643,6 +671,7 @@ function render(){
   if (state.mode === "gate"){ renderGate(main); closeStory(); return; }
   const r = route();
   if (r.view === "book"){ closeStory(); renderBook(main, r.id); }
+  else if (r.view === "dates"){ closeStory(); renderDates(main); }
   else if (r.view === "yearall"){ closeStory(); renderYearAll(main, r.year); }
   else { renderShelf(main); if (r.view === "review") openStory(r.year); else closeStory(); }
 }
@@ -710,6 +739,9 @@ function renderShelf(main){
   '</div>';
   html += '<div class="review-cta"><div><h3>Your ' + Y + ' in books</h3><p>' + (ys.fin.length ? "Tap through your year: " + plural(ys.fin.length, "book") + " so far." : "Finish a book and it shows up here.") + '</p></div><a class="btn" href="#/review/' + Y + '" style="background:#FFF8EC;color:#17201A;border-color:#17201A">Open ▸</a></div>';
 
+  const noDate = state.books.filter(b => b.needsDate).length;
+  if (noDate) html += '<div class="banner" style="margin-top:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span><b>' + plural(noDate, "finished book") + '</b> ' + (noDate === 1 ? "doesn\'t" : "don\'t") + ' have a finish date yet. Just the month is fine, or “don\'t remember”.</span><a class="btn gold sm" href="#/dates">Set when you finished them →</a></div>';
+
   // Reading now
   html += '<div class="sec-h"><h2>Reading now</h2>' + (reading.length ? '<span class="sub">' + plural(reading.length, "book") + '</span>' : "") + '</div>';
   if (reading.length) html += '<div class="now-grid">' + reading.map(nowCard).join("") + '</div>';
@@ -761,6 +793,8 @@ function spine(b){
   let chips = "";
   if (b.status === "finished"){
     if (st.days) chips += '<span class="chip pink">' + plural(st.days, "day") + '</span>';
+    else if (b.needsDate) chips += '<span class="chip gold">when?</span>';
+    else if (precOf(b) === "month") chips += '<span class="chip">' + MONTHS[parseDay(b.finished).getMonth()] + '</span>';
     if (b.rating) chips += '<span class="stars">' + stars(b.rating) + '</span>';
   } else if (b.status === "want"){
     if (b.pages) chips += '<span class="chip">' + Number(b.pages).toLocaleString() + ' pages</span>';
@@ -856,7 +890,7 @@ function renderBook(main, id){
 
   // Stats
   const tiles = [];
-  if (st.days != null) tiles.push(tile(b.status === "finished" ? "Took" : b.status === "dnf" ? "Read for" : "Reading for", st.days + '<small> ' + (st.days === 1 ? "day" : "days") + '</small>', fmtDay(b.started) + (b.finished && b.status !== "reading" ? " → " + fmtDay(b.finished) : " → today")));
+  if (st.days != null) tiles.push(tile(b.status === "finished" ? "Took" : b.status === "dnf" ? "Read for" : "Reading for", st.days + '<small> ' + (st.days === 1 ? "day" : "days") + '</small>', fmtDay(b.started) + (b.finished && b.status !== "reading" ? " → " + fmtFinished(b) : " → today")));
   if (st.minutes) tiles.push(tile("Time read", fmtDur(st.minutes).replace(/ (h|min)/g, "<small> $1</small>"), plural(st.ss.length, "session")));
   if (st.ss.length) tiles.push(tile("Avg session", fmtDur(st.minutes / st.ss.length).replace(/ (h|min)/g, "<small> $1</small>"), "longest " + fmtDur(Math.max(...st.ss.map(sessMin)))));
   if (st.pph) tiles.push(tile("Speed", Math.round(st.pph) + "<small> pages/h</small>", "about " + (Math.round(60 / st.pph * 10) / 10) + " min a page"));
@@ -888,8 +922,8 @@ function renderBook(main, id){
   const rr = $('[data-act="reread"]', main);
   if (rr) rr.onclick = () => {
     if (b.status === "finished" && !confirm("Start “" + b.title + "” again? Your first read stays in your stats as a finished book, and this copy starts fresh.")) return;
-    if (b.status === "dnf"){ b.status = "reading"; b.finished = null; saveBook(b); return; }
-    const copy = Object.assign({}, b, {id: uid(), status: "reading", started: todayKey(), finished: null, sessions: [], live: null, page: 0, rating: 0, added: new Date().toISOString(), rereadOf: b.id});
+    if (b.status === "dnf"){ b.status = "reading"; b.finished = null; b.finishedPrec = "day"; b.needsDate = false; saveBook(b); return; }
+    const copy = Object.assign({}, b, {id: uid(), status: "reading", started: todayKey(), finished: null, finishedPrec: "day", needsDate: false, datesChecked: true, sessions: [], live: null, page: 0, rating: 0, added: new Date().toISOString(), rereadOf: b.id});
     saveBook(copy, true); location.hash = "#/book/" + copy.id;
   };
   const pi = $("#pageNow"), ps = $("#pageSave");
@@ -917,9 +951,54 @@ function datesLine(b, st){
   if (b.status === "want") return b.added ? '<div class="meta">Added ' + fmtDay(dayKey(b.added)) + '</div>' : "";
   const bits = [];
   if (b.started) bits.push("Started <b>" + fmtDay(b.started) + "</b>");
-  if (b.finished && b.status === "finished") bits.push("finished <b>" + fmtDay(b.finished) + "</b>");
-  if (b.finished && b.status === "dnf") bits.push("stopped <b>" + fmtDay(b.finished) + "</b>");
+  if (!b.started && (b.status === "finished" || b.status === "dnf") && !b.needsDate && precOf(b) === "day") bits.push("start date not set");
+  if (b.finished && (b.status === "finished" || b.status === "dnf")){
+    if (b.needsDate) bits.push('finish date not set · <a href="#/dates" style="color:var(--gold);font-weight:700">set it</a>');
+    else bits.push((b.status === "dnf" ? "stopped " : "finished ") + "<b>" + (precOf(b) === "day" ? fmtDay(b.finished) : "in " + fmtFinished(b, true)) + "</b>");
+  }
   return bits.length ? '<div class="meta">' + bits.join(" · ") + '</div>' : "";
+}
+
+/* ---------- set finish dates for many books at once ---------- */
+function renderDates(main){
+  const list = state.books.filter(b => (b.status === "finished" || b.status === "dnf") && (b.needsDate || precOf(b) !== "day"))
+    .sort((a, b) => (b.needsDate ? 1 : 0) - (a.needsDate ? 1 : 0) || String(a.title).localeCompare(String(b.title)));
+  const thisY = new Date().getFullYear();
+  let html = '<a class="btn ghost back" href="#/">← The shelf</a>';
+  html += '<div class="sec-h" style="margin-top:0"><h2>When did you finish them?</h2><span class="sub">The month is plenty. Pick “Don\'t remember” if you don\'t know.</span></div>';
+  if (!list.length){ main.innerHTML = html + '<div class="empty"><h3>All set</h3><p>Every finished book has a date.</p></div>'; return; }
+  html += '<div class="panel tablewrap"><table class="list"><thead><tr><th>Book</th><th>Month</th><th>Year</th><th></th></tr></thead><tbody>' +
+    list.map(b => {
+      const known = !b.needsDate && precOf(b) === "month" ? parseDay(b.finished).getMonth() + 1 : 0;
+      const y = b.finished ? b.finished.slice(0, 4) : thisY;
+      return '<tr data-row="' + b.id + '"><td><div style="display:flex;gap:10px;align-items:center;--cw:34px">' + coverHTML(b) + '<div><b>' + esc(b.title) + '</b>' + (b.author ? '<br><span class="hint">' + esc(b.author) + '</span>' : "") + '</div></div></td>' +
+        '<td><select class="inp" data-month style="min-width:150px"><option value="0">Don\'t remember</option>' + MONTHS_LONG.map((m, i) => '<option value="' + (i + 1) + '"' + (known === i + 1 ? " selected" : "") + '>' + m + '</option>').join("") + '</select></td>' +
+        '<td><input class="inp num" data-year type="number" min="1900" max="' + thisY + '" value="' + y + '" style="width:96px"></td>' +
+        '<td><button class="link-btn" type="button" data-exact="' + b.id + '" style="font-size:13px;white-space:nowrap">Exact dates…</button></td></tr>';
+    }).join("") + '</tbody></table></div>' +
+    '<div class="err" id="dErr" role="alert" style="margin-top:12px"></div>' +
+    '<div class="acts-row" style="margin-top:14px"><a class="btn ghost" href="#/">Cancel</a><button class="btn primary" type="button" id="dSave">Save all</button></div>';
+  main.innerHTML = html;
+  $$("[data-exact]", main).forEach(x => x.onclick = () => openBookForm(bookById(x.dataset.exact)));
+  $("#dSave").onclick = () => {
+    const rows = $$("[data-row]", main); let bad = null;
+    const plan = rows.map(tr => {
+      const m = Number($("[data-month]", tr).value), y = Math.round(Number($("[data-year]", tr).value));
+      if (!(y >= 1900 && y <= thisY)) bad = bad || tr;
+      return {b: bookById(tr.dataset.row), m, y};
+    });
+    if (bad){ $("#dErr").textContent = "Check the years: each one needs to be between 1900 and " + thisY + "."; $("[data-year]", bad).focus(); return; }
+    let n = 0;
+    plan.forEach(({b, m, y}) => {
+      if (!b) return;
+      const finished = m ? y + "-" + pad(m) + "-01" : y + "-01-01";
+      if (m && finished > todayKey()) return;
+      b.finished = finished; b.finishedPrec = m ? "month" : "year"; b.needsDate = false; b.started = null; b.datesChecked = true;
+      saveBook(b, true); n++;
+    });
+    toast("Saved " + plural(n, "book") + ".");
+    location.hash = "#/";
+  };
 }
 
 /* ---------- modals ---------- */
@@ -952,8 +1031,13 @@ function openBookForm(b){
     '<div class="row2"><div class="field"><label for="f-format">Format</label><select class="inp" id="f-format">' + Object.entries(FORMATS).map(([k, v]) => '<option value="' + k + '"' + (d.format === k ? " selected" : "") + '>' + v + '</option>').join("") + '</select></div>' +
       '<div class="field"><label for="f-genre">Genre</label><input class="inp" id="f-genre" list="genreList" value="' + esc(d.genre) + '" placeholder="optional"><datalist id="genreList">' + genres.map(g => '<option value="' + esc(g) + '">').join("") + '</datalist></div></div>' +
     '<div class="field"><span class="lbl">Where is it?</span><div class="seg" role="group" id="f-status">' + ["reading", "finished", "want", "dnf"].map(k => '<button type="button" data-s="' + k + '" aria-pressed="' + (d.status === k) + '">' + STATUS[k] + '</button>').join("") + '</div></div>' +
-    '<div class="row2" id="f-dates"><div class="field" id="w-started"><label for="f-started">Started</label><input class="inp" id="f-started" type="date" value="' + esc(d.started || "") + '"></div>' +
-      '<div class="field" id="w-finished"><label for="f-finished" id="l-finished">Finished</label><input class="inp" id="f-finished" type="date" value="' + esc(d.finished || "") + '"></div></div>' +
+    '<div class="field" id="w-mode"><span class="lbl" id="l-mode">When did you finish it?</span><div class="seg" role="group" id="f-mode">' +
+      [["day", "Exact dates"], ["month", "Just the month"], ["year", "Don\'t remember"]].map(([k, v]) => '<button type="button" data-m="' + k + '">' + v + '</button>').join("") + '</div></div>' +
+    '<div class="row2" id="f-dates"><div class="field" id="w-started"><label for="f-started">Started <span id="l-startopt" style="font-weight:500">(optional)</span></label><input class="inp" id="f-started" type="date" value="' + esc(d.started || "") + '"></div>' +
+      '<div class="field" id="w-finished"><label for="f-finished" id="l-finished">Finished</label><input class="inp" id="f-finished" type="date" value="' + esc(precOf(d) === "day" && !d.needsDate ? d.finished || "" : "") + '"></div></div>' +
+    '<div class="row2" id="f-approx"><div class="field" id="w-month"><label for="f-month">Month</label><select class="inp" id="f-month">' + MONTHS_LONG.map((m, i) => '<option value="' + (i + 1) + '"' + (d.finished && precOf(d) === "month" && parseDay(d.finished).getMonth() === i ? " selected" : (!(d.finished && precOf(d) === "month") && i === new Date().getMonth() ? " selected" : "")) + '>' + m + '</option>').join("") + '</select></div>' +
+      '<div class="field"><label for="f-year">Year</label><input class="inp num" id="f-year" type="number" min="1900" max="' + new Date().getFullYear() + '" inputmode="numeric" value="' + (d.finished ? d.finished.slice(0, 4) : new Date().getFullYear()) + '"></div></div>' +
+    '<p class="hint" id="f-approxnote" style="margin:0"></p>' +
     '<div class="field" id="w-rating"><span class="lbl">Rating</span><div class="rate" id="f-rate">' + [1,2,3,4,5].map(n => '<button type="button" data-r="' + n + '" aria-label="' + n + ' stars" class="' + (n <= (d.rating || 0) ? "on" : "") + '">★</button>').join("") + '</div></div>' +
     '<details' + (d.notes || d.cover ? " open" : "") + '><summary class="hint" style="cursor:pointer">Notes and cover picture</summary><div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">' +
       '<div class="field"><label for="f-notes">Notes</label><textarea class="inp" id="f-notes" rows="3" placeholder="Who recommended it, favorite quote, anything">' + esc(d.notes) + '</textarea></div>' +
@@ -962,15 +1046,30 @@ function openBookForm(b){
     '<div class="acts-row">' + (isNew ? "" : '<button class="btn danger sm" type="button" id="delBook">Delete</button><span class="spacer"></span>') + '<button class="btn ghost" type="button" data-close>Cancel</button><button class="btn primary" type="submit">' + (isNew ? "Add it" : "Save") + '</button></div>' +
     '</form>');
   let status = d.status, rating = d.rating || 0, picked = {cover: d.cover, olKey: d.olKey, isbn: d.isbn};
+  // Books added as already finished usually get "Just the month": you rarely know the exact days.
+  let mode = b ? (b.needsDate ? "year" : precOf(b)) : "month";
+  let autoStart = isNew; // the Started box still holds the default "today"
+  $("#f-started").addEventListener("input", () => { autoStart = false; });
   const syncStatus = () => {
+    const done = status === "finished" || status === "dnf";
     $$("#f-status button").forEach(x => x.setAttribute("aria-pressed", x.dataset.s === status));
-    $("#w-started").hidden = status === "want";
-    $("#w-finished").hidden = status === "want" || status === "reading";
+    $$("#f-mode button").forEach(x => x.setAttribute("aria-pressed", x.dataset.m === mode));
+    $("#w-mode").hidden = !done;
+    $("#l-mode").textContent = status === "dnf" ? "When did you stop?" : "When did you finish it?";
+    $("#f-dates").hidden = status === "want" || (done && mode !== "day");
+    $("#w-finished").hidden = !done;
+    $("#l-startopt").hidden = !done;
+    $("#f-approx").hidden = !done || mode === "day";
+    $("#w-month").hidden = mode !== "month";
+    $("#f-approxnote").hidden = !done || mode === "day";
+    $("#f-approxnote").textContent = mode === "month" ? "It counts in that month. Days-to-read is skipped." : "It counts in that year, but not in any month. Days-to-read is skipped.";
     $("#l-finished").textContent = status === "dnf" ? "Stopped" : "Finished";
-    $("#w-rating").hidden = status !== "finished" && status !== "dnf";
-    if ((status === "finished" || status === "dnf") && !$("#f-finished").value) $("#f-finished").value = todayKey();
+    $("#w-rating").hidden = !done;
+    if (done && autoStart){ $("#f-started").value = ""; autoStart = false; } // don't invent a start date
+    if (done && mode === "day" && !$("#f-finished").value) $("#f-finished").value = todayKey();
     if (status === "reading" && !$("#f-started").value) $("#f-started").value = todayKey();
   };
+  $$("#f-mode button").forEach(x => x.onclick = () => { mode = x.dataset.m; syncStatus(); });
   syncStatus();
   $$("#f-status button").forEach(x => x.onclick = () => { status = x.dataset.s; syncStatus(); });
   $$("#f-rate button").forEach(x => x.onclick = () => { const n = Number(x.dataset.r); rating = rating === n ? 0 : n; $$("#f-rate button").forEach(y => y.classList.toggle("on", Number(y.dataset.r) <= rating)); });
@@ -993,14 +1092,25 @@ function openBookForm(b){
     const err = $("#fErr");
     const title = $("#f-title").value.trim();
     if (!title){ err.textContent = "Give it a title."; $("#f-title").focus(); return; }
-    const started = status === "want" ? (d.started || null) : ($("#f-started").value || null);
-    const finished = status === "finished" || status === "dnf" ? ($("#f-finished").value || todayKey()) : null;
+    const done = status === "finished" || status === "dnf";
+    let started = status === "want" ? (d.started || null) : ($("#f-started").value || null);
+    let finished = null, prec = "day";
+    if (done && mode === "day") finished = $("#f-finished").value || todayKey();
+    if (done && mode !== "day"){
+      const y = Math.round(Number($("#f-year").value));
+      if (!(y >= 1900 && y <= new Date().getFullYear())){ err.textContent = "Enter the year you finished it."; return; }
+      prec = mode;
+      finished = mode === "month" ? y + "-" + pad(Number($("#f-month").value)) + "-01" : y + "-01-01";
+      if (mode === "month" && finished > todayKey()){ err.textContent = "That month hasn't happened yet."; return; }
+      started = null;
+    }
     if (started && finished && finished < started){ err.textContent = "The finish date is before the start date."; return; }
     const out = Object.assign({}, b || {id: uid(), sessions: [], added: new Date().toISOString(), page: 0}, {
       title, author: $("#f-author").value.trim(), pages: Number($("#f-pages").value) > 0 ? Math.round(Number($("#f-pages").value)) : null,
       format: $("#f-format").value, genre: $("#f-genre").value.trim(), status, started: status === "want" ? null : started, finished,
       rating: status === "finished" || status === "dnf" ? rating : (d.rating || 0), notes: $("#f-notes").value.trim(),
       cover: $("#f-cover").value.trim(), olKey: picked.olKey || "", isbn: picked.isbn || "",
+      finishedPrec: done ? prec : "day", needsDate: false, datesChecked: true,
     });
     if (status !== "reading" && status !== "want") out.live = null;
     if (status === "want"){ out.live = null; }
@@ -1106,7 +1216,7 @@ function openSessionForm(b, s, fromLive){
     if (b.status === "want") b.status = "reading";
     const doneBook = $("#s-bookdone") && $("#s-bookdone").checked;
     closeModal();
-    if (doneBook){ b.status = "finished"; b.finished = dayKey(end); saveBook(b); openFinish(b, true); return; }
+    if (doneBook){ b.status = "finished"; b.finished = dayKey(end); b.finishedPrec = "day"; b.needsDate = false; saveBook(b); openFinish(b, true); return; }
     saveBook(b);
     toast(fromLive ? "Saved: " + fmtDur(sessMin(rec)) + (sessPages(rec) ? ", " + plural(sessPages(rec), "page") : "") + "." : "Session saved.");
   };
@@ -1126,7 +1236,7 @@ function openFinish(b, already){
     if (!already){
       const day = $("#fin-day").value || todayKey();
       if (b.started && day < b.started){ toast("That's before you started it."); return; }
-      b.status = "finished"; b.finished = day; b.live = null;
+      b.status = "finished"; b.finished = day; b.finishedPrec = "day"; b.needsDate = false; b.live = null;
       if (!b.started) b.started = day;
     }
     b.rating = rating;
@@ -1160,7 +1270,7 @@ function buildCards(Y){
     '<span class="eyebrow">Books finished</span><div class="huge" data-count="' + s.fin.length + '">' + s.fin.length + '</div>' +
     '<h2>' + (s.fin.length === 1 ? "book, start to finish." : "books, start to finish.") + '</h2>' +
     '<p>' + (s.started.length ? "You started " + plural(s.started.length, "book") + " this year" + (s.dnf.length ? " and set " + s.dnf.length + " aside" : "") + "." : "") + '</p>' +
-    (s.fin[0] ? '<p class="note">First one: ' + esc(s.fin[0].title) + ' (' + fmtDay(s.fin[0].finished) + ')' + (s.fin.length > 1 ? '. Latest: ' + esc(s.fin[s.fin.length - 1].title) + '.' : '.') + '</p>' : "")});
+    (() => { const dated = s.fin.filter(b => precOf(b) !== "year" && !b.needsDate); return dated.length ? '<p class="note">First one: ' + esc(dated[0].title) + ' (' + fmtFinished(dated[0]) + ')' + (dated.length > 1 ? '. Latest: ' + esc(dated[dated.length - 1].title) + '.' : '.') + '</p>' : ""; })()});
   if (s.pagesFin) cards.push({bg: "#3DBA70", html:
     '<span class="eyebrow">Pages</span><div class="huge" data-count="' + s.pagesFin + '">' + s.pagesFin.toLocaleString() + '</div><h2>pages turned.</h2>' +
     '<p>Stacked up, that\'s a pile of paper about ' + stackText(s.pagesFin) + ' tall.</p>' +
@@ -1331,7 +1441,7 @@ function renderYearAll(main, Y){
   html += '<div class="sec-h"><h2>Every book from ' + Y + '</h2><span class="sub">in the order you finished them</span></div>';
   if (s.fin.length){
     html += '<div class="panel tablewrap"><table class="list"><thead><tr><th>#</th><th>Book</th><th>Finished</th><th class="r">Days</th><th class="r">Pages</th><th class="r">Time</th><th>Rating</th></tr></thead><tbody>' +
-      s.fin.map((b, i) => { const st = bookStats(b); return '<tr class="click" data-go="' + b.id + '"><td class="num">' + (i + 1) + '</td><td><b>' + esc(b.title) + '</b>' + (b.author ? '<br><span class="hint">' + esc(b.author) + '</span>' : "") + '</td><td>' + fmtDay(b.finished) + '</td><td class="r num">' + (st.days || "–") + '</td><td class="r num">' + (b.pages || "–") + '</td><td class="r num">' + (st.minutes ? fmtDur(st.minutes) : "–") + '</td><td class="stars">' + stars(b.rating) + '</td></tr>'; }).join("") +
+      s.fin.map((b, i) => { const st = bookStats(b); return '<tr class="click" data-go="' + b.id + '"><td class="num">' + (i + 1) + '</td><td><b>' + esc(b.title) + '</b>' + (b.author ? '<br><span class="hint">' + esc(b.author) + '</span>' : "") + '</td><td>' + (fmtFinished(b) || "–") + '</td><td class="r num">' + (st.days || "–") + '</td><td class="r num">' + (b.pages || "–") + '</td><td class="r num">' + (st.minutes ? fmtDur(st.minutes) : "–") + '</td><td class="stars">' + stars(b.rating) + '</td></tr>'; }).join("") +
       '</tbody></table></div>';
   } else html += '<div class="empty">No finished books in ' + Y + '.</div>';
   main.innerHTML = html;
