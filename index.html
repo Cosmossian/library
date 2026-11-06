@@ -478,7 +478,7 @@ function normalize(b){
   // The first add form filled Started and Finished with the day the book was added, so finished books
   // added after the fact showed "1 day". Those dates weren't real: clear them and ask for the month instead.
   if ((b.status === "finished" || b.status === "dnf") && !b.finishedPrec && !b.datesChecked && !b.sessions.length &&
-      b.started && b.started === b.finished && b.added && dayKey(b.added) === b.finished){
+      b.started && b.started === b.finished){
     b.started = null; b.finishedPrec = "year"; b.needsDate = true; b.datesChecked = true; b._migrated = true;
   }
   return b;
@@ -756,7 +756,8 @@ function renderShelf(main){
     ["finished", "want", "dnf"].map(k => '<button type="button" data-filter="' + k + '" aria-pressed="' + (state.filter === k) + '">' + STATUS[k] + '<span class="c">' + counts[k] + '</span></button>').join("") +
     '</div>' +
     (state.filter === "finished" && finYears.length > 1 ? '<select class="inp" id="shelfYear" style="width:auto" aria-label="Year"><option value="all">All years</option>' + finYears.map(y => '<option' + (state.shelfYear === y ? " selected" : "") + '>' + y + '</option>').join("") + '</select>' : "") +
-    '<input class="inp searchbox" id="shelfQ" type="search" placeholder="Search title, author, genre" value="' + esc(state.q) + '" aria-label="Search the shelf"></div>';
+    '<input class="inp searchbox" id="shelfQ" type="search" placeholder="Search title, author, genre" value="' + esc(state.q) + '" aria-label="Search the shelf">' +
+    (state.filter === "finished" && counts.finished ? '<a class="btn sm" href="#/dates" style="margin-left:auto">📅 Set finish dates</a>' : "") + '</div>';
   html += '<div class="shelf" id="shelfList">' + shelfItems() + '</div>';
   main.innerHTML = html;
 
@@ -960,37 +961,44 @@ function datesLine(b, st){
 }
 
 /* ---------- set finish dates for many books at once ---------- */
+let datesAll = false;
 function renderDates(main){
-  const list = state.books.filter(b => (b.status === "finished" || b.status === "dnf") && (b.needsDate || precOf(b) !== "day"))
+  const undated = b => b.needsDate || precOf(b) !== "day";
+  const list = state.books.filter(b => (b.status === "finished" || b.status === "dnf") && (datesAll || undated(b)))
     .sort((a, b) => (b.needsDate ? 1 : 0) - (a.needsDate ? 1 : 0) || String(a.title).localeCompare(String(b.title)));
   const thisY = new Date().getFullYear();
   let html = '<a class="btn ghost back" href="#/">← The shelf</a>';
   html += '<div class="sec-h" style="margin-top:0"><h2>When did you finish them?</h2><span class="sub">The month is plenty. Pick “Don\'t remember” if you don\'t know.</span></div>';
-  if (!list.length){ main.innerHTML = html + '<div class="empty"><h3>All set</h3><p>Every finished book has a date.</p></div>'; return; }
+  const total = state.books.filter(b => b.status === "finished" || b.status === "dnf").length;
+  html += '<label class="check" style="margin-bottom:12px;font-size:15px"><input type="checkbox" id="dAll"' + (datesAll ? " checked" : "") + '> Show all ' + plural(total, "finished book") + ' (including ones with exact dates)</label>';
+  if (!list.length){ main.innerHTML = html + '<div class="empty"><h3>All set</h3><p>Every finished book has a date. Tick the box above to change any of them.</p></div>'; $("#dAll").onchange = e => { datesAll = e.target.checked; renderDates(main); }; return; }
   html += '<div class="panel tablewrap"><table class="list"><thead><tr><th>Book</th><th>Month</th><th>Year</th><th></th></tr></thead><tbody>' +
     list.map(b => {
-      const known = !b.needsDate && precOf(b) === "month" ? parseDay(b.finished).getMonth() + 1 : 0;
+      const known = !b.needsDate && precOf(b) !== "year" && b.finished ? parseDay(b.finished).getMonth() + 1 : 0;
       const y = b.finished ? b.finished.slice(0, 4) : thisY;
       return '<tr data-row="' + b.id + '"><td><div style="display:flex;gap:10px;align-items:center;--cw:34px">' + coverHTML(b) + '<div><b>' + esc(b.title) + '</b>' + (b.author ? '<br><span class="hint">' + esc(b.author) + '</span>' : "") + '</div></div></td>' +
         '<td><select class="inp" data-month style="min-width:150px"><option value="0">Don\'t remember</option>' + MONTHS_LONG.map((m, i) => '<option value="' + (i + 1) + '"' + (known === i + 1 ? " selected" : "") + '>' + m + '</option>').join("") + '</select></td>' +
         '<td><input class="inp num" data-year type="number" min="1900" max="' + thisY + '" value="' + y + '" style="width:96px"></td>' +
-        '<td><button class="link-btn" type="button" data-exact="' + b.id + '" style="font-size:13px;white-space:nowrap">Exact dates…</button></td></tr>';
+        '<td><button class="link-btn" type="button" data-exact="' + b.id + '" style="font-size:13px;white-space:nowrap">Exact dates…</button>' + (precOf(b) === "day" && !b.needsDate ? '<br><span class="hint">now: ' + esc(fmtFinished(b)) + '</span>' : "") + '</td></tr>';
     }).join("") + '</tbody></table></div>' +
     '<div class="err" id="dErr" role="alert" style="margin-top:12px"></div>' +
     '<div class="acts-row" style="margin-top:14px"><a class="btn ghost" href="#/">Cancel</a><button class="btn primary" type="button" id="dSave">Save all</button></div>';
   main.innerHTML = html;
   $$("[data-exact]", main).forEach(x => x.onclick = () => openBookForm(bookById(x.dataset.exact)));
+  $("#dAll").onchange = e => { datesAll = e.target.checked; renderDates(main); };
+  $$("[data-row] select, [data-row] input", main).forEach(el => el.addEventListener("change", () => el.closest("tr").dataset.changed = "1"));
   $("#dSave").onclick = () => {
     const rows = $$("[data-row]", main); let bad = null;
     const plan = rows.map(tr => {
       const m = Number($("[data-month]", tr).value), y = Math.round(Number($("[data-year]", tr).value));
       if (!(y >= 1900 && y <= thisY)) bad = bad || tr;
-      return {b: bookById(tr.dataset.row), m, y};
+      return {b: bookById(tr.dataset.row), m, y, touch: tr.dataset.changed === "1"};
     });
     if (bad){ $("#dErr").textContent = "Check the years: each one needs to be between 1900 and " + thisY + "."; $("[data-year]", bad).focus(); return; }
     let n = 0;
-    plan.forEach(({b, m, y}) => {
+    plan.forEach(({b, m, y, touch}) => {
       if (!b) return;
+      if (!touch && !b.needsDate) return; // leave untouched rows exactly as they were
       const finished = m ? y + "-" + pad(m) + "-01" : y + "-01-01";
       if (m && finished > todayKey()) return;
       b.finished = finished; b.finishedPrec = m ? "month" : "year"; b.needsDate = false; b.started = null; b.datesChecked = true;
