@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Library · Book Log</title>
+<meta name="description" content="A book log: what you're reading, how fast, and your year in books.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='4' width='56' height='56' rx='14' fill='%23FF6FA8' stroke='%2317201A' stroke-width='4'/%3E%3Cpath d='M18 18h12a4 4 0 0 1 4 4v24a3 3 0 0 0-3-3H18zM46 18H38a4 4 0 0 0-4 4v24a3 3 0 0 1 3-3h9z' fill='%23FFF8EC' stroke='%2317201A' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: same chunky outlined look as the other sections, always dark, Library pink as the accent. Books are the color: covers do the work. */
+:root{
+  --bg:#111512; --surface:#1A201C; --surface2:#222A24; --ink:#EDF1E9; --muted:#A3AEA5; --line:#3C463F; --soft:#262E28; --shadow:#000;
+  --library:#FF6FA8; --library-dark:#C9407A; --gold:#FFC628; --green:#3DBA70; --blue:#5B9BF0; --purple:#A07BE0; --orange:#FF8A4D; --danger:#FF6A4D;
+  --display:"Bricolage Grotesque","Arial Black",system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit}
+img{display:block;max-width:100%}
+[hidden]{display:none !important}
+:focus-visible{outline:3px solid var(--library);outline-offset:2px}
+h1,h2,h3,h4{font-family:var(--display);margin:0;letter-spacing:-.02em;text-wrap:balance;line-height:1.1}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 20px 80px}
+
+/* Header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.logo{width:52px;height:52px;flex:none;border:2px solid #17201A;border-radius:14px;background:var(--library);box-shadow:4px 4px 0 var(--shadow);display:grid;place-items:center}
+.logo svg{width:30px;height:30px}
+.brand h1{font-size:clamp(28px,4vw,40px);font-weight:800}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.top-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.who{font-size:13px;color:var(--muted)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border:2px solid var(--line);border-radius:12px;background:var(--surface);font-weight:700;cursor:pointer;box-shadow:3px 3px 0 var(--shadow);transition:transform .12s,box-shadow .12s;text-decoration:none;white-space:nowrap}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--shadow)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn.primary{background:var(--library);color:#17201A;border-color:#17201A}
+.btn.gold{background:var(--gold);color:#17201A;border-color:#17201A}
+.btn.go{background:var(--green);color:#17201A;border-color:#17201A}
+.btn.stop{background:var(--orange);color:#17201A;border-color:#17201A}
+.btn.ghost{background:transparent;box-shadow:none}
+.btn.danger{color:var(--danger);border-color:var(--danger);background:transparent;box-shadow:none}
+.btn.sm{padding:6px 11px;font-size:14px;border-radius:10px;box-shadow:2px 2px 0 var(--shadow)}
+.link-btn{border:none;background:none;padding:0;font:inherit;font-weight:700;color:var(--ink);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+
+/* Panels */
+.panel{background:var(--surface);border:2px solid var(--line);border-radius:18px;box-shadow:5px 5px 0 var(--shadow);padding:20px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:34px 0 14px}
+.sec-h h2{font-size:26px;font-weight:800}
+.sec-h .sub{color:var(--muted);font-size:14px}
+.banner{border:2px dashed var(--gold);border-radius:14px;padding:12px 16px;margin-bottom:18px;color:var(--ink);background:rgba(255,198,40,.08);font-size:15px}
+.banner code{font-family:var(--mono);font-size:13px}
+
+/* Covers */
+.cover{position:relative;flex:none;container-type:inline-size;width:var(--cw,72px);aspect-ratio:2/3;border:2px solid #17201A;border-radius:6px 10px 10px 6px;overflow:hidden;background:var(--soft);box-shadow:3px 3px 0 var(--shadow)}
+.cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.cover .fake{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:8%;font-family:var(--display);font-weight:800;color:#17201A;font-size:14cqw;line-height:1.05;background:hsl(var(--h,330) 85% 72%);overflow:hidden;word-break:break-word}
+.cover .fake::before{content:"";position:absolute;left:7%;top:0;bottom:0;width:3px;background:rgba(0,0,0,.18)}
+
+/* Stats strip */
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.tile{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:4px 4px 0 var(--shadow)}
+.tile .k{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.tile .v{font-family:var(--mono);font-size:28px;font-weight:600;line-height:1.15;margin-top:4px}
+.tile .v small{font-size:15px;color:var(--muted);font-family:var(--body);font-weight:600}
+.tile .s{font-size:13px;color:var(--muted);margin-top:2px}
+.review-cta{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:16px;padding:16px 20px;border:2px solid #17201A;border-radius:18px;background:linear-gradient(120deg,var(--library) 0%,var(--purple) 100%);color:#17201A;box-shadow:5px 5px 0 var(--shadow)}
+.review-cta h3{font-size:22px;font-weight:800}
+.review-cta p{margin:2px 0 0;font-weight:600;font-size:14px}
+
+/* Reading now */
+.now-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
+.now{display:flex;gap:16px;align-items:flex-start;--cw:86px}
+.now .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.now h3{font-size:20px;font-weight:800}
+.now h3 a{text-decoration:none}
+.now h3 a:hover{text-decoration:underline}
+.by{color:var(--muted);font-size:14px;margin:0}
+.bar{height:12px;border:2px solid var(--line);border-radius:999px;background:var(--soft);overflow:hidden}
+.bar > i{display:block;height:100%;background:var(--library);border-radius:999px}
+.meta{font-size:13px;color:var(--muted)}
+.meta b{color:var(--ink)}
+.now .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.live{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-weight:600;color:var(--orange)}
+.live::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--orange);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.empty{border:2px dashed var(--line);border-radius:18px;padding:26px;text-align:center;color:var(--muted)}
+.empty h3{color:var(--ink);font-size:20px;margin-bottom:6px}
+
+/* Shelf filters */
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.seg button{border:none;background:none;padding:8px 14px;font-weight:700;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--library);color:#17201A}
+.seg button .c{font-family:var(--mono);font-size:12px;opacity:.8;margin-left:4px}
+.inp,select.inp{width:100%;padding:10px 12px;border:2px solid var(--line);border-radius:10px;background:var(--bg);min-width:0}
+.inp:focus{border-color:var(--library);outline:none}
+.searchbox{flex:1 1 200px;max-width:320px}
+
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:22px 18px;margin-top:18px}
+.spine{display:flex;flex-direction:column;gap:8px;text-decoration:none;--cw:100%}
+.spine .cover{width:100%;transition:transform .15s}
+.spine:hover .cover{transform:translateY(-4px) rotate(-1deg)}
+.spine h4{font-family:var(--body);font-size:15px;font-weight:700;letter-spacing:0;line-height:1.25}
+.spine .by{font-size:13px}
+.spine .meta{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;border:1.5px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.pink{border-color:var(--library);color:var(--library)}
+.chip.gold{border-color:var(--gold);color:var(--gold)}
+.chip.green{border-color:var(--green);color:var(--green)}
+.stars{color:var(--gold);letter-spacing:1px;font-size:13px}
+.year-h{grid-column:1/-1;font-family:var(--display);font-size:20px;font-weight:800;border-bottom:2px solid var(--line);padding-bottom:6px;margin-top:6px}
+
+/* Book page */
+.back{display:inline-flex;margin-bottom:16px}
+.book-head{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;--cw:150px}
+.book-head .info{flex:1;min-width:260px;display:flex;flex-direction:column;gap:10px}
+.book-head h2{font-size:clamp(28px,4vw,40px);font-weight:800}
+.book-head .acts{display:flex;gap:10px;flex-wrap:wrap}
+.status-pill{align-self:flex-start;font-weight:800;font-size:13px;padding:3px 10px;border-radius:999px;border:2px solid #17201A;color:#17201A}
+.st-reading{background:var(--library)} .st-finished{background:var(--green)} .st-want{background:var(--blue)} .st-dnf{background:var(--muted)}
+.pageset{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.pageset .inp{width:90px;padding:6px 10px}
+.notes{white-space:pre-wrap;color:var(--muted);font-size:15px;margin:0}
+
+table.list{width:100%;border-collapse:collapse;font-size:15px}
+table.list th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:6px 8px;border-bottom:2px solid var(--line)}
+table.list td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.list tr.click{cursor:pointer}
+table.list tr.click:hover td{background:var(--soft)}
+table.list td.r,table.list th.r{text-align:right}
+.tablewrap{overflow-x:auto}
+
+/* Modal */
+.ov{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.6);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto}
+.modal{width:100%;max-width:560px;background:var(--surface);border:2px solid var(--line);border-radius:20px;box-shadow:6px 6px 0 var(--shadow);padding:22px;display:flex;flex-direction:column;gap:14px}
+.modal h3{font-size:24px;font-weight:800}
+.modal p{margin:0}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label,.field .lbl{font-size:13px;font-weight:700;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.acts-row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
+.acts-row .spacer{flex:1}
+.err{color:var(--danger);font-weight:700;font-size:14px;min-height:0}
+.err:empty{display:none}
+.hint{font-size:13px;color:var(--muted)}
+.check{display:flex;gap:10px;align-items:center;font-weight:600;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--library)}
+.results{display:flex;flex-direction:column;gap:8px;max-height:330px;overflow-y:auto}
+.result{display:flex;gap:12px;align-items:center;text-align:left;width:100%;padding:8px;border:2px solid var(--line);border-radius:12px;background:var(--bg);cursor:pointer;--cw:42px}
+.result:hover,.result.picked{border-color:var(--library)}
+.result .cover{box-shadow:none}
+.result b{display:block;line-height:1.25}
+.result span{font-size:13px;color:var(--muted)}
+.rate{display:flex;gap:2px}
+.rate button{border:none;background:none;font-size:28px;line-height:1;padding:0 2px;cursor:pointer;color:var(--line)}
+.rate button.on{color:var(--gold)}
+.big-timer{font-family:var(--mono);font-size:42px;font-weight:600;color:var(--orange);text-align:center}
+
+/* Toast */
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:90;background:var(--ink);color:var(--bg);font-weight:700;padding:10px 18px;border-radius:12px;box-shadow:4px 4px 0 var(--shadow);max-width:90vw}
+
+/* Sign-in gate */
+.gate{max-width:440px;margin:40px auto 0;display:flex;flex-direction:column;gap:14px}
+.gate h2{font-size:30px;font-weight:800}
+
+/* Year in review: cards */
+.story{position:fixed;inset:0;z-index:70;background:#0A0D0B;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}
+.story-frame{position:relative;width:min(100vw,460px);height:min(100dvh,820px);overflow:hidden;border-radius:0}
+@media (min-width:520px){.story-frame{border:3px solid #17201A;border-radius:26px;height:min(92dvh,820px);box-shadow:8px 8px 0 #000}}
+.bars{position:absolute;top:12px;left:12px;right:12px;display:flex;gap:4px;z-index:5}
+.bars i{flex:1;height:4px;border-radius:4px;background:rgba(23,32,26,.25);overflow:hidden}
+.bars i.done{background:#17201A}
+.bars i.cur{background:linear-gradient(90deg,#17201A 50%,rgba(23,32,26,.25) 50%);background-size:200% 100%;background-position:100% 0;animation:fill .5s forwards}
+@keyframes fill{to{background-position:0 0}}
+.story-x{position:absolute;top:24px;right:14px;z-index:6;width:40px;height:40px;border-radius:50%;border:2px solid #17201A;background:rgba(255,255,255,.65);color:#17201A;font-size:20px;font-weight:800;cursor:pointer}
+.story-all{position:absolute;top:28px;left:14px;z-index:6;border:2px solid #17201A;background:rgba(255,255,255,.65);color:#17201A;font-weight:800;font-size:13px;border-radius:999px;padding:5px 12px;cursor:pointer}
+.card{position:absolute;inset:0;padding:84px 28px 40px;display:flex;flex-direction:column;justify-content:center;gap:16px;color:#17201A;background:var(--cbg,var(--library))}
+.card .eyebrow{font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:13px;opacity:.75}
+.card h2{font-size:clamp(30px,8vw,44px);font-weight:800;line-height:1.02}
+.card .huge{font-family:var(--display);font-weight:800;font-size:clamp(84px,26vw,140px);line-height:.9;letter-spacing:-.04em}
+.card .huge small{font-size:.3em;letter-spacing:0;margin-left:6px}
+.card p{margin:0;font-size:18px;font-weight:600;line-height:1.35}
+.card .note{font-size:15px;opacity:.8;font-weight:600}
+.card .tapnote{position:absolute;bottom:16px;left:0;right:0;text-align:center;font-size:13px;font-weight:700;opacity:.55}
+.card .fan{display:flex;justify-content:center;margin:6px 0;min-height:120px;--cw:78px}
+.card .fan .cover{margin:0 -14px;transition:transform .5s}
+.card .pair{display:flex;gap:16px;align-items:center;--cw:90px}
+.card .pair + .pair{margin-top:6px}
+.card .pair .t b{display:block;font-family:var(--display);font-size:22px;line-height:1.1}
+.card .pair .t span{font-weight:700;opacity:.8}
+.card .months{display:flex;align-items:flex-end;gap:5px;margin-top:6px}
+.card .months div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;font-size:11px;font-weight:800}
+.card .months i{display:block;width:100%;background:#17201A;border-radius:5px 5px 2px 2px;min-height:3px;transform-origin:bottom;animation:grow .6s both}
+.card .months div.top i{background:#FFF8EC;border:2px solid #17201A}
+@keyframes grow{from{transform:scaleY(0)}}
+.card .summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card .summary div{background:rgba(255,255,255,.4);border:2px solid #17201A;border-radius:14px;padding:10px 12px}
+.card .summary b{display:block;font-family:var(--display);font-size:26px;line-height:1}
+.card .summary span{font-size:13px;font-weight:700}
+.card .wall{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;--cw:100%}
+.card .wall .cover{box-shadow:2px 2px 0 #17201A;border-width:1.5px}
+.card .btn{align-self:flex-start;border-color:#17201A}
+.card .yearpick{display:flex;gap:8px;flex-wrap:wrap}
+.card .yearpick button{border:2px solid #17201A;background:rgba(255,255,255,.35);border-radius:999px;padding:4px 12px;font-weight:800;cursor:pointer;color:#17201A}
+.card .yearpick button[aria-pressed=true]{background:#17201A;color:#FFF8EC}
+.card.rise > *{animation:rise .5s both}
+.card.rise > *:nth-child(2){animation-delay:.08s}.card.rise > *:nth-child(3){animation-delay:.16s}.card.rise > *:nth-child(4){animation-delay:.24s}.card.rise > *:nth-child(5){animation-delay:.32s}.card.rise > *:nth-child(6){animation-delay:.4s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+.tapzone{position:absolute;top:70px;bottom:0;z-index:4;background:transparent;border:none;cursor:pointer}
+.tapzone.prev{left:0;width:32%}
+.tapzone.next{right:0;width:68%}
+
+/* Year in review: see it all */
+.yr-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.yr-head h2{font-size:clamp(30px,5vw,46px);font-weight:800}
+.chart{display:flex;align-items:flex-end;gap:8px;padding-top:10px}
+.chart .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;min-width:0}
+.chart .col i{display:block;width:100%;max-width:46px;border-radius:6px 6px 2px 2px;background:var(--library);min-height:2px}
+.chart .col span{font-size:12px;color:var(--muted);font-weight:700}
+.chart .col b{font-family:var(--mono);font-size:12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.hl{display:flex;gap:14px;align-items:center;--cw:60px;padding:10px 0;border-bottom:1px solid var(--line)}
+.hl:last-child{border-bottom:none}
+.hl .k{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--library)}
+.hl b{display:block;font-size:16px;line-height:1.25}
+.hl span{font-size:13px;color:var(--muted)}
+
+footer{margin-top:50px;color:var(--muted);font-size:13px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+
+@media (max-width:640px){
+  .wrap{padding:18px 14px 70px}
+  .two{grid-template-columns:1fr}
+  .now-grid{grid-template-columns:1fr}
+  .now{--cw:72px}
+  .shelf{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:18px 14px}
+  .book-head{--cw:110px;gap:16px}
+  .row3{grid-template-columns:1fr 1fr}
+  .ov{padding:16px 10px}
+  .chart{gap:4px}
+}
+@media (prefers-reduced-motion: reduce){ *{animation:none !important;transition:none !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <a class="logo" href="#/" aria-label="The Library home"><svg viewBox="0 0 32 32" fill="none" stroke="#17201A" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"><path d="M4 7h8a4 4 0 0 1 4 4v15a3 3 0 0 0-3-3H4zM28 7h-8a4 4 0 0 0-4 4v15a3 3 0 0 1 3-3h9z" fill="#FFF8EC"/></svg></a>
+      <div>
+        <h1>The Library</h1>
+        <p id="whoLine">Your book log</p>
+      </div>
+    </div>
+    <div class="top-actions" id="topActs"></div>
+  </header>
+  <div id="banner"></div>
+  <main id="main" aria-live="polite"></main>
+  <footer id="foot"></footer>
+</div>
+<div class="ov" id="ov" hidden></div>
+<div id="storyRoot"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="/nav.js" defer></script>
+<script>
+"use strict";
+/* ============================================================
+   The Library: a book log with reading sessions and a year in review.
+   Data: Supabase table library_books (one row per book: id, user_id, data jsonb), private per account.
+   The book list is cached in localStorage so the page opens instantly, then refreshed from the database.
+   Without an account it can run on this device only (localStorage "library-books").
+   Book data: {title, author, pages, format, genre, cover, olKey, isbn, status, started, finished,
+               rating, notes, page, live:{start, startPage}, sessions:[{id,start,end,startPage,endPage,chapter,chapterDone}], added, updated}
+   ============================================================ */
+const CFG = window.LIBRARY_CONFIG || {};
+const KIDS_DOMAIN = "@kids.thatonedrawer.com";
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONTHS_LONG = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAYS_LONG = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const STATUS = {reading:"Reading now", finished:"Finished", want:"Want to read", dnf:"Didn't finish"};
+const FORMATS = {print:"Print", ebook:"E-book", audio:"Audiobook"};
+const GENRES = ["Fiction","Fantasy","Science fiction","Mystery","Thriller","Horror","Romance","Historical fiction","Literary fiction","Young adult","Children's","Graphic novel","Poetry","Nonfiction","Biography","Memoir","History","Science","Self-help","Business","Religion","Philosophy","Cooking","Humor","Travel"];
+
+let sb = null;
+const state = {
+  mode: "loading",      // loading | gate | db | local
+  session: null,
+  books: [],
+  tableMissing: false,
+  filter: "finished",
+  shelfYear: "all",
+  q: "",
+};
+const $ = (s, el) => (el || document).querySelector(s);
+const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------- storage ---------- */
+function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } }
+function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+function uid(){ try{ return crypto.randomUUID(); }catch(e){ return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c === "x" ? r : (r&3|8)).toString(16); }); } }
+function cacheKey(){ return state.mode === "db" && state.session ? "library-cache:" + state.session.user.id : "library-books"; }
+function queueKey(){ return state.session ? "library-queue:" + state.session.user.id : "library-queue"; }
+
+/* ---------- dates ---------- */
+const pad = n => String(n).padStart(2, "0");
+function dayKey(d){ d = d instanceof Date ? d : new Date(d); return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); }
+function todayKey(){ return dayKey(new Date()); }
+function parseDay(s){ if (!s) return null; const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); }
+function daysBetween(a, b){ return Math.round((parseDay(b) - parseDay(a)) / 86400000); }
+function addDays(key, n){ const d = parseDay(key); d.setDate(d.getDate() + n); return dayKey(d); }
+function toLocalInput(d){ d = d instanceof Date ? d : new Date(d); return dayKey(d) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+function fromLocalInput(s){ const d = new Date(s); return isNaN(d) ? null : d.toISOString(); }
+function fmtDay(s, withYear){
+  const d = parseDay(s); if (!d) return "";
+  const y = withYear || d.getFullYear() !== new Date().getFullYear();
+  return MONTHS[d.getMonth()] + " " + d.getDate() + (y ? ", " + d.getFullYear() : "");
+}
+function fmtTime(iso){ const d = new Date(iso); let h = d.getHours(); const ap = h < 12 ? "am" : "pm"; h = h % 12 || 12; return h + ":" + pad(d.getMinutes()) + " " + ap; }
+function fmtDur(min){
+  min = Math.round(min || 0);
+  if (min < 60) return min + " min";
+  const h = Math.floor(min / 60), m = min % 60;
+  return h + " h" + (m ? " " + m + " min" : "");
+}
+function fmtHours(min){ const h = min / 60; return h >= 10 ? Math.round(h).toLocaleString() : (Math.round(h * 10) / 10).toLocaleString(); }
+function fmtClock(ms){ const s = Math.max(0, Math.floor(ms / 1000)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60; return (h ? h + ":" + pad(m) : m) + ":" + pad(ss); }
+function plural(n, one, many){ return n.toLocaleString() + " " + (n === 1 ? one : (many || one + "s")); }
+
+/* ---------- book math ---------- */
+function sessMin(s){ if (!s.start || !s.end) return 0; return Math.max(0, (new Date(s.end) - new Date(s.start)) / 60000); }
+function sessPages(s){ const a = Number(s.startPage), b = Number(s.endPage); return (s.startPage !== "" && s.endPage !== "" && s.startPage != null && s.endPage != null && isFinite(a) && isFinite(b) && b >= a) ? b - a : null; }
+function sessions(b){ return (b.sessions || []).slice().sort((x, y) => new Date(x.start) - new Date(y.start)); }
+function currentPage(b){
+  let p = Number(b.page) || 0;
+  (b.sessions || []).forEach(s => { const e = Number(s.endPage); if (isFinite(e) && e > p) p = e; });
+  if (b.status === "finished" && b.pages) p = Math.max(p, Number(b.pages));
+  return p;
+}
+function progress(b){ const p = Number(b.pages); return p > 0 ? Math.min(1, currentPage(b) / p) : 0; }
+function chapterStats(b){
+  const map = new Map();
+  sessions(b).forEach(s => {
+    const label = String(s.chapter || "").trim(); if (!label) return;
+    const c = map.get(label) || {label, minutes: 0, pages: 0, sessions: 0, done: false, first: s.start, last: s.end};
+    c.minutes += sessMin(s); c.pages += sessPages(s) || 0; c.sessions++; c.done = c.done || !!s.chapterDone; c.last = s.end;
+    map.set(label, c);
+  });
+  const list = Array.from(map.values());
+  const done = list.filter(c => c.done && c.minutes > 0);
+  return {list, avgDone: done.length ? done.reduce((a, c) => a + c.minutes, 0) / done.length : null, doneCount: done.length};
+}
+function speedOf(list){ // list of sessions → pages per hour (only sessions with pages)
+  let pg = 0, mn = 0;
+  list.forEach(s => { const p = sessPages(s), m = sessMin(s); if (p != null && p > 0 && m > 0){ pg += p; mn += m; } });
+  return mn >= 5 ? pg / (mn / 60) : null;
+}
+function bookStats(b){
+  const ss = sessions(b);
+  const minutes = ss.reduce((a, s) => a + sessMin(s), 0);
+  const pph = b.format === "audio" ? null : speedOf(ss);
+  let days = null;
+  if (b.started){ const end = (b.status === "finished" || b.status === "dnf") && b.finished ? b.finished : todayKey(); days = daysBetween(b.started, end) + 1; }
+  const left = b.pages ? Math.max(0, Number(b.pages) - currentPage(b)) : null;
+  return {ss, minutes, pph, days, left, ch: chapterStats(b)};
+}
+function overallSpeed(){ return speedOf([].concat(...state.books.filter(b => b.format !== "audio").map(b => b.sessions || []))); }
+function hueOf(s){ let h = 0; s = String(s || ""); for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360; return h; }
+function stars(n){ n = Math.round(n || 0); return n ? "★".repeat(n) + "<span style=\"opacity:.3\">" + "★".repeat(5 - n) + "</span>" : ""; }
+function coverHTML(b, extra){
+  return '<span class="cover" style="--h:' + hueOf(b.title + b.author) + (extra ? ";" + extra : "") + '">' +
+    (b.cover ? '<img src="' + esc(b.cover) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : "") +
+    '<span class="fake">' + esc(b.title || "Untitled") + '</span></span>';
+}
+// Broken cover pictures fall back to the colored "fake" cover underneath.
+document.addEventListener("error", e => { if (e.target.tagName === "IMG" && e.target.parentNode && e.target.parentNode.classList.contains("cover")) e.target.remove(); }, true);
+
+/* ---------- streaks & years ---------- */
+function readingDays(){ // set of day keys with a session (or a live session today)
+  const set = new Set();
+  state.books.forEach(b => { (b.sessions || []).forEach(s => { if (s.start) set.add(dayKey(s.start)); }); if (b.live) set.add(todayKey()); });
+  return set;
+}
+function longestStreak(keys){
+  const list = Array.from(keys).sort(); let best = 0, run = 0, prev = null, bestEnd = null;
+  list.forEach(k => { run = prev && daysBetween(prev, k) === 1 ? run + 1 : 1; if (run > best){ best = run; bestEnd = k; } prev = k; });
+  return {days: best, end: bestEnd, start: bestEnd ? addDays(bestEnd, 1 - best) : null};
+}
+function currentStreak(){
+  const set = readingDays(); let k = todayKey(); if (!set.has(k)) k = addDays(k, -1);
+  let n = 0; while (set.has(k)){ n++; k = addDays(k, -1); }
+  return n;
+}
+function yearsWithData(){
+  const ys = new Set([new Date().getFullYear()]);
+  state.books.forEach(b => {
+    if (b.finished) ys.add(Number(b.finished.slice(0, 4)));
+    if (b.started) ys.add(Number(b.started.slice(0, 4)));
+    (b.sessions || []).forEach(s => s.start && ys.add(new Date(s.start).getFullYear()));
+  });
+  return Array.from(ys).filter(Boolean).sort((a, b) => b - a);
+}
+function count(list){ const m = new Map(); list.forEach(x => { if (x) m.set(x, (m.get(x) || 0) + 1); }); return Array.from(m.entries()).sort((a, b) => b[1] - a[1]); }
+
+function yearStats(Y){
+  Y = Number(Y);
+  const books = state.books;
+  const fin = books.filter(b => b.status === "finished" && b.finished && Number(b.finished.slice(0, 4)) === Y).sort((a, b) => a.finished < b.finished ? -1 : 1);
+  const started = books.filter(b => b.started && Number(b.started.slice(0, 4)) === Y);
+  const dnf = books.filter(b => b.status === "dnf" && b.finished && Number(b.finished.slice(0, 4)) === Y);
+  const sess = [];
+  books.forEach(b => (b.sessions || []).forEach(s => { if (s.start && new Date(s.start).getFullYear() === Y) sess.push({b, s}); }));
+  const minutes = sess.reduce((a, x) => a + sessMin(x.s), 0);
+  const sessPg = sess.reduce((a, x) => a + (sessPages(x.s) || 0), 0);
+  const pagesFin = fin.reduce((a, b) => a + (Number(b.pages) || 0), 0);
+  const pph = speedOf(sess.filter(x => x.b.format !== "audio").map(x => x.s));
+  const byMonth = Array(12).fill(0), minByMonth = Array(12).fill(0);
+  fin.forEach(b => byMonth[parseDay(b.finished).getMonth()]++);
+  sess.forEach(x => minByMonth[new Date(x.s.start).getMonth()] += sessMin(x.s));
+  const dayset = new Set(sess.map(x => dayKey(x.s.start)));
+  const streak = longestStreak(dayset);
+  const dow = Array(7).fill(0); sess.forEach(x => dow[new Date(x.s.start).getDay()] += sessMin(x.s));
+  const tod = {morning: 0, afternoon: 0, evening: 0, night: 0};
+  sess.forEach(x => { const h = new Date(x.s.start).getHours(); tod[h >= 5 && h < 12 ? "morning" : h < 17 && h >= 12 ? "afternoon" : h >= 17 && h < 21 ? "evening" : "night"] += sessMin(x.s); });
+  const withDays = fin.filter(b => b.started).map(b => ({b, days: daysBetween(b.started, b.finished) + 1})).filter(x => x.days > 0);
+  const fastest = withDays.slice().sort((a, b) => a.days - b.days || (Number(b.b.pages) || 0) - (Number(a.b.pages) || 0))[0] || null;
+  const slowest = withDays.slice().sort((a, b) => b.days - a.days)[0] || null;
+  const longest = fin.filter(b => Number(b.pages) > 0).sort((a, b) => b.pages - a.pages)[0] || null;
+  const shortest = fin.filter(b => Number(b.pages) > 0).sort((a, b) => a.pages - b.pages)[0] || null;
+  const avgDays = withDays.length ? withDays.reduce((a, x) => a + x.days, 0) / withDays.length : null;
+  const authors = count(fin.map(b => (b.author || "").trim()));
+  const genres = count(fin.map(b => (b.genre || "").trim()));
+  const rated = fin.filter(b => b.rating).sort((a, b) => b.rating - a.rating || (a.finished < b.finished ? 1 : -1));
+  const longSess = sess.slice().sort((a, b) => sessMin(b.s) - sessMin(a.s))[0] || null;
+  const topMonth = byMonth.some(n => n) ? byMonth.indexOf(Math.max(...byMonth)) : null;
+  const topMinMonth = minByMonth.some(n => n) ? minByMonth.indexOf(Math.max(...minByMonth)) : null;
+  const formats = count(fin.map(b => b.format || "print"));
+  const mostTime = (() => { const m = new Map(); sess.forEach(x => m.set(x.b, (m.get(x.b) || 0) + sessMin(x.s))); return Array.from(m.entries()).sort((a, b) => b[1] - a[1])[0] || null; })();
+  return {Y, fin, started, dnf, sess, minutes, sessPg, pagesFin, pph, byMonth, minByMonth, dayset, streak, dow, tod, fastest, slowest, longest, shortest, avgDays, authors, genres, rated, longSess, topMonth, topMinMonth, formats, mostTime};
+}
+
+/* ============================================================
+   Loading & saving
+   ============================================================ */
+let saveTimers = {};
+function setBooks(list){ state.books = list.map(normalize); }
+function normalize(b){ b = Object.assign({}, b); b.sessions = Array.isArray(b.sessions) ? b.sessions : []; b.status = STATUS[b.status] ? b.status : "want"; return b; }
+function cacheNow(){ lsSet(cacheKey(), state.books); }
+function bookById(id){ return state.books.find(b => b.id === id); }
+function rowOf(b){ const data = Object.assign({}, b); delete data.id; return {id: b.id, data, updated_at: new Date().toISOString()}; }
+
+function saveBook(b, quiet){
+  b.updated = new Date().toISOString();
+  const i = state.books.findIndex(x => x.id === b.id);
+  if (i < 0) state.books.push(b); else state.books[i] = b;
+  cacheNow();
+  if (state.mode === "db" && !state.tableMissing){
+    clearTimeout(saveTimers[b.id]);
+    saveTimers[b.id] = setTimeout(() => pushBook(b.id), 400);
+  }
+  if (!quiet) render();
+}
+async function pushBook(id){
+  const b = bookById(id); if (!b || !sb) return;
+  try{
+    const { error } = await sb.from("library_books").upsert(rowOf(b));
+    if (error) throw error;
+    dequeue(id);
+  }catch(e){ enqueue({op: "put", id}); noteSaveError(e); }
+}
+async function deleteBook(id){
+  state.books = state.books.filter(b => b.id !== id);
+  cacheNow();
+  if (state.mode === "db" && !state.tableMissing && sb){
+    try{ const { error } = await sb.from("library_books").delete().eq("id", id); if (error) throw error; dequeue(id); }
+    catch(e){ enqueue({op: "del", id}); noteSaveError(e); }
+  }
+}
+function enqueue(item){ const q = lsGet(queueKey(), []).filter(x => x.id !== item.id); q.push(item); lsSet(queueKey(), q); }
+function dequeue(id){ lsSet(queueKey(), lsGet(queueKey(), []).filter(x => x.id !== id)); }
+let flushing = false;
+async function flushQueue(){
+  if (flushing || state.mode !== "db" || state.tableMissing || !sb) return;
+  const q = lsGet(queueKey(), []); if (!q.length) return;
+  flushing = true;
+  for (const item of q){
+    try{
+      if (item.op === "del"){ const { error } = await sb.from("library_books").delete().eq("id", item.id); if (error) throw error; }
+      else { const b = bookById(item.id); if (b){ const { error } = await sb.from("library_books").upsert(rowOf(b)); if (error) throw error; } }
+      dequeue(item.id);
+    }catch(e){ break; }
+  }
+  flushing = false;
+  renderBanner();
+}
+function isMissingTable(e){ const m = String((e && (e.message || e.code)) || ""); return /42P01|PGRST205|does not exist|could not find the table|schema cache/i.test(m); }
+function noteSaveError(e){
+  if (isMissingTable(e)){ state.tableMissing = true; }
+  renderBanner();
+}
+
+async function fetchBooks(){
+  if (!sb || state.mode !== "db") return;
+  try{
+    const { data, error } = await sb.from("library_books").select("id,data,updated_at");
+    if (error) throw error;
+    state.tableMissing = false;
+    const pending = new Set(lsGet(queueKey(), []).map(x => x.id));
+    const remote = (data || []).map(r => Object.assign({}, r.data, {id: r.id}));
+    const local = new Map(state.books.map(b => [b.id, b]));
+    const merged = remote.filter(b => !(pending.has(b.id) && !local.has(b.id))).map(b => pending.has(b.id) && local.has(b.id) ? local.get(b.id) : b);
+    state.books.forEach(b => { if (pending.has(b.id) && !merged.find(x => x.id === b.id)) merged.push(b); });
+    setBooks(merged);
+    cacheNow();
+    await adoptLocalBooks();
+    render();
+    flushQueue();
+  }catch(e){
+    if (isMissingTable(e)) state.tableMissing = true;
+    renderBanner();
+  }
+}
+// Books logged on this device before signing in move into the account.
+async function adoptLocalBooks(){
+  const local = lsGet("library-books", []);
+  if (!local.length || state.tableMissing) return;
+  const have = new Set(state.books.map(b => b.id));
+  const add = local.filter(b => !have.has(b.id)).map(normalize);
+  if (!add.length){ lsDel("library-books"); return; }
+  try{
+    const { error } = await sb.from("library_books").upsert(add.map(rowOf));
+    if (error) throw error;
+    state.books = state.books.concat(add); cacheNow(); lsDel("library-books");
+    toast("Moved " + plural(add.length, "book") + " from this device into your account.");
+  }catch(e){}
+}
+
+/* ---------- sign in ---------- */
+async function init(){
+  window.addEventListener("hashchange", render);
+  window.addEventListener("online", flushQueue);
+  window.addEventListener("focus", () => { if (state.mode === "db") fetchBooks(); });
+  setInterval(tick, 1000);
+  if (!window.supabase || !CFG.supabaseUrl || !CFG.supabaseAnonKey){ startLocal(true); return; }
+  // Default session storage: the same sign-in as the Recipe Box (same Supabase project, same site).
+  sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey);
+  try{ const { data } = await sb.auth.getSession(); setSession(data.session); }catch(e){ setSession(null); }
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === "INITIAL_SESSION") return;
+    if (event === "TOKEN_REFRESHED"){ state.session = session || state.session; return; }
+    setTimeout(() => setSession(session), 0); // outside Supabase's auth lock
+  });
+}
+function setSession(session){
+  const was = state.session && state.session.user.id;
+  state.session = session || null;
+  if (session){
+    state.mode = "db";
+    if (was !== session.user.id){ setBooks(lsGet(cacheKey(), [])); }
+    render();
+    fetchBooks();
+  } else if (lsGet("library-local-mode", false)){
+    startLocal(false);
+  } else {
+    state.mode = "gate"; state.books = []; render();
+  }
+}
+function startLocal(noDb){
+  state.mode = "local"; state.noDb = !!noDb;
+  setBooks(lsGet("library-books", []));
+  render();
+}
+function loginEmail(s){ s = s.trim(); return s.includes("@") ? s : s.toLowerCase() + KIDS_DOMAIN; }
+function openSignIn(mode){
+  mode = mode || "in";
+  modal('<form id="authForm" novalidate>' +
+    '<h3>' + (mode === "up" ? "Create your account" : "Sign in") + '</h3>' +
+    '<p class="hint">' + (mode === "up" ? "Your book log is private to your account." : "Same sign-in as the Recipe Box. A Study username works too.") + '</p>' +
+    '<div class="field"><label for="a-email">' + (mode === "up" ? "Email" : "Email or username") + '</label><input class="inp" id="a-email" ' + (mode === "up" ? 'type="email" autocomplete="email"' : 'type="text" autocomplete="username" autocapitalize="off"') + ' required></div>' +
+    '<div class="field"><label for="a-pass">Password</label><input class="inp" id="a-pass" type="password" autocomplete="' + (mode === "up" ? "new-password" : "current-password") + '" minlength="6" required></div>' +
+    '<div class="err" id="aErr" role="alert"></div>' +
+    '<div class="acts-row"><button class="link-btn" type="button" data-m="' + (mode === "up" ? "in" : "up") + '">' + (mode === "up" ? "I have an account" : "Create an account") + '</button><span class="spacer"></span><button class="btn ghost" type="button" data-close>Cancel</button><button class="btn primary" type="submit">' + (mode === "up" ? "Create account" : "Sign in") + '</button></div>' +
+  '</form>');
+  $("#a-email").focus();
+  $("[data-m]").onclick = e => openSignIn(e.target.dataset.m);
+  $("#authForm").onsubmit = async e => {
+    e.preventDefault();
+    const raw = $("#a-email").value, password = $("#a-pass").value, err = $("#aErr");
+    if (!raw.trim() || password.length < 6){ err.textContent = "Enter your " + (mode === "up" ? "email" : "email or username") + " and a password of at least 6 characters."; return; }
+    const email = mode === "up" ? raw.trim() : loginEmail(raw);
+    const btn = e.target.querySelector("[type=submit]"); btn.disabled = true; err.textContent = "";
+    try{
+      const res = mode === "up" ? await sb.auth.signUp({email, password}) : await sb.auth.signInWithPassword({email, password});
+      if (res.error) throw res.error;
+      if (mode === "up" && !res.data.session){ err.textContent = "Account created, but Supabase wants the email confirmed first. Confirm it from the email (or in Supabase: Authentication → Users), then sign in."; btn.disabled = false; return; }
+      closeModal();
+      lsDel("library-local-mode");
+      toast(mode === "up" ? "Welcome to the Library!" : "Signed in.");
+    }catch(x){
+      btn.disabled = false;
+      const m = String(x.message || "");
+      err.textContent = /invalid login/i.test(m) ? "That sign-in and password don't match." : /already registered/i.test(m) ? "That email already has an account. Sign in instead." : m || "Couldn't sign in. Check your connection.";
+    }
+  };
+}
+async function signOut(){
+  if (!sb) return;
+  await Promise.race([sb.auth.signOut({scope: "local"}).catch(() => {}), new Promise(r => setTimeout(r, 4000))]);
+  setSession(null);
+}
+
+/* ============================================================
+   Rendering
+   ============================================================ */
+function route(){
+  const h = location.hash.replace(/^#\/?/, "");
+  const parts = h.split("/").filter(Boolean);
+  if (parts[0] === "book" && parts[1]) return {view: "book", id: parts[1]};
+  if (parts[0] === "review") return {view: parts[2] === "all" ? "yearall" : "review", year: Number(parts[1]) || new Date().getFullYear()};
+  return {view: "shelf"};
+}
+function render(){
+  renderTop(); renderBanner(); renderFoot();
+  const main = $("#main");
+  if (state.mode === "loading"){ main.innerHTML = '<p class="hint">Opening the Library…</p>'; return; }
+  if (state.mode === "gate"){ renderGate(main); closeStory(); return; }
+  const r = route();
+  if (r.view === "book"){ closeStory(); renderBook(main, r.id); }
+  else if (r.view === "yearall"){ closeStory(); renderYearAll(main, r.year); }
+  else { renderShelf(main); if (r.view === "review") openStory(r.year); else closeStory(); }
+}
+function renderTop(){
+  const acts = $("#topActs"), who = $("#whoLine");
+  if (state.mode === "db"){
+    const name = (state.session.user.email || "").replace(KIDS_DOMAIN, "").split("@")[0];
+    who.innerHTML = "Hi, " + esc(name) + ' · <button class="link-btn" type="button" id="soBtn">Sign out</button>';
+    $("#soBtn").onclick = signOut;
+  } else if (state.mode === "local"){
+    who.innerHTML = "On this device only" + (state.noDb ? "" : ' · <button class="link-btn" type="button" id="siBtn">Sign in to keep it everywhere</button>');
+    if ($("#siBtn")) $("#siBtn").onclick = () => openSignIn("in");
+  } else who.textContent = "Your book log";
+  const on = state.mode === "db" || state.mode === "local";
+  acts.innerHTML = on ? '<button class="btn gold" type="button" id="yrBtn">★ Year in review</button><button class="btn primary" type="button" id="addBtn">+ Add a book</button>' : "";
+  if (on){ $("#addBtn").onclick = () => openBookForm(null); $("#yrBtn").onclick = () => { location.hash = "#/review/" + new Date().getFullYear(); }; }
+}
+function renderBanner(){
+  const el = $("#banner"); const q = lsGet(queueKey(), []);
+  let html = "";
+  if (state.mode === "db" && state.tableMissing) html = '<div class="banner"><b>One-time setup:</b> the Library\'s table isn\'t in Supabase yet. Run <code>library-setup.sql</code> in Supabase (SQL Editor → New query → paste → Run). Until then, books are kept on this device and will upload once it\'s there.</div>';
+  else if (state.mode === "db" && q.length) html = '<div class="banner">' + plural(q.length, "change") + ' waiting to upload. They\'ll go up when the connection is back. <button class="link-btn" type="button" id="retryBtn">Try now</button></div>';
+  el.innerHTML = html;
+  if ($("#retryBtn")) $("#retryBtn").onclick = () => { flushQueue(); };
+}
+function renderFoot(){
+  const f = $("#foot");
+  if (state.mode !== "db" && state.mode !== "local"){ f.innerHTML = ""; return; }
+  f.innerHTML = '<button class="link-btn" type="button" id="expBtn">Download my books (backup)</button><span>Book info and covers from Open Library</span>';
+  $("#expBtn").onclick = () => {
+    const blob = new Blob([JSON.stringify({exported: new Date().toISOString(), books: state.books}, null, 2)], {type: "application/json"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "library-books-" + todayKey() + ".json"; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+}
+
+function renderGate(main){
+  main.innerHTML = '<div class="gate panel">' +
+    '<h2>Your books, your stats</h2>' +
+    '<p>Log what you\'re reading, time your reading sessions, and get a year in review of everything you read.</p>' +
+    '<button class="btn primary" type="button" id="gIn">Sign in</button>' +
+    '<button class="btn" type="button" id="gUp">Create an account</button>' +
+    '<p class="hint">Same sign-in as the Recipe Box. Each account has its own private book log.</p>' +
+    '<button class="link-btn" type="button" id="gLocal" style="align-self:flex-start;font-size:14px">Just try it on this device</button>' +
+  '</div>';
+  $("#gIn").onclick = () => openSignIn("in");
+  $("#gUp").onclick = () => openSignIn("up");
+  $("#gLocal").onclick = () => { lsSet("library-local-mode", true); startLocal(false); };
+}
+
+/* ---------- shelf ---------- */
+function renderShelf(main){
+  const Y = new Date().getFullYear();
+  const ys = yearStats(Y);
+  const reading = state.books.filter(b => b.status === "reading").sort((a, b) => (b.live ? 1 : 0) - (a.live ? 1 : 0) || String(b.updated || "").localeCompare(String(a.updated || "")));
+  const streak = currentStreak();
+  let html = "";
+
+  // This year so far
+  html += '<div class="strip">' +
+    tile("Books in " + Y, ys.fin.length, ys.started.length ? plural(ys.started.length, "started", "started") : "finished this year") +
+    tile("Pages", ys.pagesFin.toLocaleString(), "in books finished") +
+    tile("Time reading", ys.minutes ? fmtHours(ys.minutes) + "<small> h</small>" : "–", ys.sess.length ? plural(ys.sess.length, "session") : "start a timer to track it") +
+    tile("Streak", streak ? streak + "<small> " + (streak === 1 ? "day" : "days") + "</small>" : "–", ys.streak.days > 1 ? "best this year: " + ys.streak.days + " days" : "days in a row with a session") +
+  '</div>';
+  html += '<div class="review-cta"><div><h3>Your ' + Y + ' in books</h3><p>' + (ys.fin.length ? "Tap through your year: " + plural(ys.fin.length, "book") + " so far." : "Finish a book and it shows up here.") + '</p></div><a class="btn" href="#/review/' + Y + '" style="background:#FFF8EC;color:#17201A;border-color:#17201A">Open ▸</a></div>';
+
+  // Reading now
+  html += '<div class="sec-h"><h2>Reading now</h2>' + (reading.length ? '<span class="sub">' + plural(reading.length, "book") + '</span>' : "") + '</div>';
+  if (reading.length) html += '<div class="now-grid">' + reading.map(nowCard).join("") + '</div>';
+  else html += '<div class="empty"><h3>Nothing on the go</h3><p>Add a book you\'re reading, or start one from your Want to read list.</p><p><button class="btn primary" type="button" data-act="add" style="margin-top:8px">+ Add a book</button></p></div>';
+
+  // Shelf
+  const counts = {finished: 0, want: 0, dnf: 0};
+  state.books.forEach(b => { if (counts[b.status] != null) counts[b.status]++; });
+  const finYears = Array.from(new Set(state.books.filter(b => b.status === "finished" && b.finished).map(b => b.finished.slice(0, 4)))).sort().reverse();
+  html += '<div class="sec-h"><h2>The shelf</h2></div>';
+  html += '<div class="filters"><div class="seg" role="group" aria-label="Shelf">' +
+    ["finished", "want", "dnf"].map(k => '<button type="button" data-filter="' + k + '" aria-pressed="' + (state.filter === k) + '">' + STATUS[k] + '<span class="c">' + counts[k] + '</span></button>').join("") +
+    '</div>' +
+    (state.filter === "finished" && finYears.length > 1 ? '<select class="inp" id="shelfYear" style="width:auto" aria-label="Year"><option value="all">All years</option>' + finYears.map(y => '<option' + (state.shelfYear === y ? " selected" : "") + '>' + y + '</option>').join("") + '</select>' : "") +
+    '<input class="inp searchbox" id="shelfQ" type="search" placeholder="Search title, author, genre" value="' + esc(state.q) + '" aria-label="Search the shelf"></div>';
+  html += '<div class="shelf" id="shelfList">' + shelfItems() + '</div>';
+  main.innerHTML = html;
+
+  $$("[data-filter]", main).forEach(b => b.onclick = () => { state.filter = b.dataset.filter; render(); });
+  if ($("#shelfYear")) $("#shelfYear").onchange = e => { state.shelfYear = e.target.value; $("#shelfList").innerHTML = shelfItems(); };
+  $("#shelfQ").oninput = e => { state.q = e.target.value; $("#shelfList").innerHTML = shelfItems(); };
+  wireBookActs(main);
+}
+function tile(k, v, s){ return '<div class="tile"><div class="k">' + k + '</div><div class="v">' + v + '</div><div class="s">' + s + '</div></div>'; }
+function shelfItems(){
+  const q = state.q.trim().toLowerCase();
+  let list = state.books.filter(b => b.status === state.filter);
+  if (state.filter === "finished" && state.shelfYear !== "all") list = list.filter(b => (b.finished || "").startsWith(state.shelfYear));
+  if (q) list = list.filter(b => [b.title, b.author, b.genre].join(" ").toLowerCase().includes(q));
+  if (!list.length){
+    const msg = q ? "No books match “" + esc(state.q) + "”." : state.filter === "finished" ? "Books you finish land here." : state.filter === "want" ? "Add books you want to read next." : "Books you set aside land here. No guilt.";
+    return '<div class="empty" style="grid-column:1/-1">' + msg + '</div>';
+  }
+  if (state.filter === "finished"){
+    list.sort((a, b) => String(b.finished || "").localeCompare(String(a.finished || "")));
+    let html = "", lastY = null;
+    list.forEach(b => {
+      const y = (b.finished || "").slice(0, 4) || "No date";
+      if (y !== lastY && state.shelfYear === "all" && !q){ html += '<div class="year-h">' + esc(y) + '</div>'; lastY = y; }
+      html += spine(b);
+    });
+    return html;
+  }
+  list.sort((a, b) => String(b.added || "").localeCompare(String(a.added || "")));
+  return list.map(spine).join("");
+}
+function spine(b){
+  const st = bookStats(b);
+  let chips = "";
+  if (b.status === "finished"){
+    if (st.days) chips += '<span class="chip pink">' + plural(st.days, "day") + '</span>';
+    if (b.rating) chips += '<span class="stars">' + stars(b.rating) + '</span>';
+  } else if (b.status === "want"){
+    if (b.pages) chips += '<span class="chip">' + Number(b.pages).toLocaleString() + ' pages</span>';
+  } else if (b.status === "dnf" && b.pages){
+    chips += '<span class="chip">stopped at p. ' + currentPage(b) + '</span>';
+  }
+  return '<a class="spine" href="#/book/' + b.id + '">' + coverHTML(b) +
+    '<div><h4>' + esc(b.title) + '</h4>' + (b.author ? '<p class="by">' + esc(b.author) + '</p>' : "") + '</div>' +
+    (chips ? '<div class="meta">' + chips + '</div>' : "") + '</a>';
+}
+function nowCard(b){
+  const st = bookStats(b), cp = currentPage(b);
+  const pct = Math.round(progress(b) * 100);
+  let meta = [];
+  if (b.started) meta.push("Day <b>" + st.days + "</b> · started " + fmtDay(b.started));
+  if (st.minutes) meta.push("<b>" + fmtDur(st.minutes) + "</b> read");
+  const pph = st.pph || overallSpeed();
+  if (st.left && pph) meta.push("about <b>" + fmtDur(st.left / pph * 60) + "</b> left");
+  return '<div class="panel now">' + coverHTML(b) +
+    '<div class="info"><h3><a href="#/book/' + b.id + '">' + esc(b.title) + '</a></h3>' +
+    (b.author ? '<p class="by">' + esc(b.author) + '</p>' : "") +
+    (b.pages ? '<div class="bar" title="' + pct + '%"><i style="width:' + pct + '%"></i></div><div class="meta">Page <b>' + cp + '</b> of ' + Number(b.pages).toLocaleString() + ' · ' + pct + '%</div>' : "") +
+    (meta.length ? '<div class="meta">' + meta.join(" · ") + '</div>' : "") +
+    '<div class="acts">' + timerButtons(b) + '</div></div></div>';
+}
+function timerButtons(b){
+  if (b.live) return '<button class="btn stop sm" type="button" data-act="stop" data-id="' + b.id + '">■ Stop · <span class="num" data-live="' + b.id + '">' + fmtClock(Date.now() - new Date(b.live.start)) + '</span></button>';
+  return '<button class="btn go sm" type="button" data-act="start" data-id="' + b.id + '">▶ Start reading</button>' +
+    (b.status === "reading" ? '<button class="btn sm" type="button" data-act="finish" data-id="' + b.id + '">✓ Finished it</button>' : "");
+}
+function wireBookActs(root){
+  $$("[data-act]", root).forEach(el => el.onclick = e => {
+    e.preventDefault();
+    const b = bookById(el.dataset.id), a = el.dataset.act;
+    if (a === "add") return openBookForm(null);
+    if (!b) return;
+    if (a === "start") startReading(b);
+    else if (a === "stop") openSessionForm(b, null, true);
+    else if (a === "finish") openFinish(b);
+    else if (a === "edit") openBookForm(b);
+    else if (a === "log") openSessionForm(b, null, false);
+    else if (a === "setstatus") setStatus(b, el.dataset.status);
+  });
+}
+function tick(){
+  $$("[data-live]").forEach(el => { const b = bookById(el.dataset.live); if (b && b.live) el.textContent = fmtClock(Date.now() - new Date(b.live.start)); });
+}
+
+/* ---------- reading timer ---------- */
+function startReading(b){
+  if (state.books.some(x => x.live && x.id !== b.id)){
+    const other = state.books.find(x => x.live && x.id !== b.id);
+    toast("Stop “" + other.title + "” first."); return;
+  }
+  b.live = {start: new Date().toISOString(), startPage: currentPage(b)};
+  if (b.status !== "reading") b.status = "reading";
+  if (!b.started) b.started = todayKey();
+  b.finished = null;
+  saveBook(b);
+  toast("Timer started. Happy reading!");
+}
+function setStatus(b, s){
+  b.status = s;
+  if (s === "reading" && !b.started) b.started = todayKey();
+  if (s === "want"){ b.live = null; }
+  saveBook(b);
+}
+
+/* ---------- book page ---------- */
+function renderBook(main, id){
+  const b = bookById(id);
+  if (!b){ main.innerHTML = '<a class="btn ghost back" href="#/">← The shelf</a><div class="empty"><h3>Book not found</h3><p>It may have been deleted.</p></div>'; return; }
+  const st = bookStats(b), cp = currentPage(b), pct = Math.round(progress(b) * 100);
+  const pph = st.pph || (b.format !== "audio" ? overallSpeed() : null);
+  let html = '<a class="btn ghost back" href="#/">← The shelf</a>';
+  html += '<div class="book-head">' + coverHTML(b) + '<div class="info">' +
+    '<span class="status-pill st-' + b.status + '">' + STATUS[b.status] + '</span>' +
+    '<h2>' + esc(b.title) + '</h2>' +
+    (b.author ? '<p class="by" style="font-size:17px">by ' + esc(b.author) + '</p>' : "") +
+    '<div class="meta">' + [b.pages ? Number(b.pages).toLocaleString() + " pages" : "", FORMATS[b.format] || "", b.genre ? esc(b.genre) : ""].filter(Boolean).join(" · ") + '</div>' +
+    (b.rating ? '<div class="stars" style="font-size:20px">' + stars(b.rating) + '</div>' : "") +
+    datesLine(b, st) +
+    (b.pages && b.status !== "want" ? '<div class="bar"><i style="width:' + pct + '%"></i></div><div class="pageset">On page <input class="inp num" id="pageNow" type="number" min="0" max="' + b.pages + '" value="' + cp + '" aria-label="Current page"> of ' + Number(b.pages).toLocaleString() + ' · ' + pct + '%<button class="btn sm" type="button" id="pageSave" hidden>Save</button></div>' : "") +
+    '<div class="acts">' +
+      (b.status === "reading" || b.status === "want" ? timerButtons(b) : "") +
+      (b.status === "want" ? '<button class="btn sm" type="button" data-act="setstatus" data-status="reading" data-id="' + b.id + '">Mark as reading</button>' : "") +
+      (b.status === "finished" || b.status === "dnf" ? '<button class="btn sm" type="button" data-act="reread" data-id="' + b.id + '">' + (b.status === "dnf" ? "Pick it back up" : "Read it again") + '</button>' : "") +
+      '<button class="btn sm" type="button" data-act="log" data-id="' + b.id + '">+ Log a past session</button>' +
+      '<button class="btn sm" type="button" data-act="edit" data-id="' + b.id + '">Edit</button>' +
+    '</div>' +
+    (b.notes ? '<p class="notes">' + esc(b.notes) + '</p>' : "") +
+  '</div></div>';
+
+  // Stats
+  const tiles = [];
+  if (st.days != null) tiles.push(tile(b.status === "finished" ? "Took" : b.status === "dnf" ? "Read for" : "Reading for", st.days + '<small> ' + (st.days === 1 ? "day" : "days") + '</small>', fmtDay(b.started) + (b.finished && b.status !== "reading" ? " → " + fmtDay(b.finished) : " → today")));
+  if (st.minutes) tiles.push(tile("Time read", fmtDur(st.minutes).replace(/ (h|min)/g, "<small> $1</small>"), plural(st.ss.length, "session")));
+  if (st.ss.length) tiles.push(tile("Avg session", fmtDur(st.minutes / st.ss.length).replace(/ (h|min)/g, "<small> $1</small>"), "longest " + fmtDur(Math.max(...st.ss.map(sessMin)))));
+  if (st.pph) tiles.push(tile("Speed", Math.round(st.pph) + "<small> pages/h</small>", "about " + (Math.round(60 / st.pph * 10) / 10) + " min a page"));
+  if (b.status === "reading" && st.left && pph) tiles.push(tile("To go", fmtDur(st.left / pph * 60).replace(/ (h|min)/g, "<small> $1</small>"), st.left.toLocaleString() + " pages at " + Math.round(pph) + " pages/h" + (st.pph ? "" : " (your usual)")));
+  if (st.ch.avgDone) tiles.push(tile("Per chapter", fmtDur(st.ch.avgDone).replace(/ (h|min)/g, "<small> $1</small>"), "average of " + plural(st.ch.doneCount, "finished chapter")));
+  if (b.status === "finished" && st.days && b.pages) tiles.push(tile("Pace", Math.round(b.pages / st.days) + "<small> pages/day</small>", "start to finish"));
+  if (tiles.length) html += '<div class="sec-h"><h2>Stats</h2></div><div class="strip">' + tiles.join("") + '</div>';
+
+  // Chapters
+  if (st.ch.list.length){
+    html += '<div class="sec-h"><h2>Chapters</h2><span class="sub">from the chapter on each session</span></div><div class="panel tablewrap"><table class="list"><thead><tr><th>Chapter</th><th class="r">Time</th><th class="r">Pages</th><th class="r">Sessions</th><th>Finished</th></tr></thead><tbody>' +
+      st.ch.list.map(c => '<tr><td><b>' + esc(c.label) + '</b></td><td class="r num">' + fmtDur(c.minutes) + '</td><td class="r num">' + (c.pages || "–") + '</td><td class="r num">' + c.sessions + '</td><td>' + (c.done ? '<span class="chip green">✓ ' + fmtDay(dayKey(c.last)) + " " + fmtTime(c.last) + '</span>' : '<span class="chip">in progress</span>') + '</td></tr>').join("") +
+      '</tbody></table></div>';
+  }
+
+  // Sessions
+  html += '<div class="sec-h"><h2>Reading sessions</h2><span class="sub">' + (st.ss.length ? "tap one to change it" : "optional: they power the time and speed stats") + '</span></div>';
+  if (st.ss.length){
+    html += '<div class="panel tablewrap"><table class="list"><thead><tr><th>Day</th><th>Time</th><th class="r">Length</th><th class="r">Pages</th><th>Chapter</th></tr></thead><tbody>' +
+      st.ss.slice().reverse().map(s => {
+        const p = sessPages(s);
+        return '<tr class="click" data-sess="' + s.id + '" tabindex="0"><td>' + fmtDay(dayKey(s.start)) + '</td><td>' + fmtTime(s.start) + ' – ' + fmtTime(s.end) + '</td><td class="r num">' + fmtDur(sessMin(s)) + '</td><td class="r num">' + (p != null ? (s.startPage + "→" + s.endPage + " <span class=\"hint\">(" + p + ")</span>") : "–") + '</td><td>' + (s.chapter ? esc(s.chapter) + (s.chapterDone ? " ✓" : "") : "") + '</td></tr>';
+      }).join("") + '</tbody></table></div>';
+  } else {
+    html += '<div class="empty">Tap <b>▶ Start reading</b> when you sit down with it, and <b>Stop</b> when you\'re done. It asks what page you\'re on (and the chapter, if you want), and works out your reading speed.</div>';
+  }
+  main.innerHTML = html;
+  wireBookActs(main);
+  const rr = $('[data-act="reread"]', main);
+  if (rr) rr.onclick = () => {
+    if (b.status === "finished" && !confirm("Start “" + b.title + "” again? Your first read stays in your stats as a finished book, and this copy starts fresh.")) return;
+    if (b.status === "dnf"){ b.status = "reading"; b.finished = null; saveBook(b); return; }
+    const copy = Object.assign({}, b, {id: uid(), status: "reading", started: todayKey(), finished: null, sessions: [], live: null, page: 0, rating: 0, added: new Date().toISOString(), rereadOf: b.id});
+    saveBook(copy, true); location.hash = "#/book/" + copy.id;
+  };
+  const pi = $("#pageNow"), ps = $("#pageSave");
+  if (pi){
+    pi.oninput = () => { ps.hidden = Number(pi.value) === cp; };
+    const savePage = () => {
+      const v = Math.max(0, Math.min(Number(b.pages) || 1e9, Math.round(Number(pi.value) || 0)));
+      b.page = v;
+      // Lowering the page also lowers what sessions said, so take the manual number as the truth.
+      if (v < cp) (b.sessions || []).forEach(s => { if (Number(s.endPage) > v) s.endPage = v; if (Number(s.startPage) > v) s.startPage = v; });
+      if (b.status === "want"){ b.status = "reading"; if (!b.started) b.started = todayKey(); }
+      saveBook(b);
+      if (b.pages && v >= Number(b.pages) && b.status === "reading") openFinish(b);
+      else toast("Page saved.");
+    };
+    ps.onclick = savePage;
+    pi.onkeydown = e => { if (e.key === "Enter") savePage(); };
+  }
+  $$("[data-sess]", main).forEach(tr => {
+    const open = () => openSessionForm(b, b.sessions.find(s => s.id === tr.dataset.sess), false);
+    tr.onclick = open; tr.onkeydown = e => { if (e.key === "Enter") open(); };
+  });
+}
+function datesLine(b, st){
+  if (b.status === "want") return b.added ? '<div class="meta">Added ' + fmtDay(dayKey(b.added)) + '</div>' : "";
+  const bits = [];
+  if (b.started) bits.push("Started <b>" + fmtDay(b.started) + "</b>");
+  if (b.finished && b.status === "finished") bits.push("finished <b>" + fmtDay(b.finished) + "</b>");
+  if (b.finished && b.status === "dnf") bits.push("stopped <b>" + fmtDay(b.finished) + "</b>");
+  return bits.length ? '<div class="meta">' + bits.join(" · ") + '</div>' : "";
+}
+
+/* ---------- modals ---------- */
+function modal(html){
+  const ov = $("#ov");
+  ov.innerHTML = '<div class="modal" role="dialog" aria-modal="true">' + html + '</div>';
+  ov.hidden = false;
+  document.body.style.overflow = "hidden";
+  ov.onclick = e => { if (e.target === ov || e.target.closest("[data-close]")) closeModal(); };
+  ov.onkeydown = e => { if (e.key === "Escape") closeModal(); };
+}
+function closeModal(){ const ov = $("#ov"); ov.hidden = true; ov.innerHTML = ""; document.body.style.overflow = ""; }
+let toastT;
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 3200); }
+
+/* Add / edit a book */
+function openBookForm(b){
+  const isNew = !b;
+  const d = b ? Object.assign({}, b) : {status: "reading", format: "print", started: todayKey(), rating: 0};
+  const genres = Array.from(new Set(GENRES.concat(state.books.map(x => x.genre).filter(Boolean)))).sort();
+  modal(
+    '<h3>' + (isNew ? "Add a book" : "Edit book") + '</h3>' +
+    '<div class="field"><label for="olq">' + (isNew ? "Look it up" : "Find a different cover or edition") + '</label>' +
+      '<div style="display:flex;gap:8px"><input class="inp" id="olq" type="search" placeholder="Title, author or ISBN" value="' + (isNew ? "" : esc(d.title)) + '"><button class="btn" type="button" id="olGo">Search</button></div>' +
+      '<div class="hint" id="olMsg">' + (isNew ? "Fills in the cover, author and pages. Or just type it in below." : "") + '</div><div class="results" id="olRes"></div></div>' +
+    '<form id="bookForm" novalidate style="display:flex;flex-direction:column;gap:12px">' +
+    '<div class="field"><label for="f-title">Title</label><input class="inp" id="f-title" required value="' + esc(d.title) + '"></div>' +
+    '<div class="row2"><div class="field"><label for="f-author">Author</label><input class="inp" id="f-author" value="' + esc(d.author) + '"></div>' +
+      '<div class="field"><label for="f-pages">Pages</label><input class="inp num" id="f-pages" type="number" min="0" inputmode="numeric" value="' + esc(d.pages || "") + '"></div></div>' +
+    '<div class="row2"><div class="field"><label for="f-format">Format</label><select class="inp" id="f-format">' + Object.entries(FORMATS).map(([k, v]) => '<option value="' + k + '"' + (d.format === k ? " selected" : "") + '>' + v + '</option>').join("") + '</select></div>' +
+      '<div class="field"><label for="f-genre">Genre</label><input class="inp" id="f-genre" list="genreList" value="' + esc(d.genre) + '" placeholder="optional"><datalist id="genreList">' + genres.map(g => '<option value="' + esc(g) + '">').join("") + '</datalist></div></div>' +
+    '<div class="field"><span class="lbl">Where is it?</span><div class="seg" role="group" id="f-status">' + ["reading", "finished", "want", "dnf"].map(k => '<button type="button" data-s="' + k + '" aria-pressed="' + (d.status === k) + '">' + STATUS[k] + '</button>').join("") + '</div></div>' +
+    '<div class="row2" id="f-dates"><div class="field" id="w-started"><label for="f-started">Started</label><input class="inp" id="f-started" type="date" value="' + esc(d.started || "") + '"></div>' +
+      '<div class="field" id="w-finished"><label for="f-finished" id="l-finished">Finished</label><input class="inp" id="f-finished" type="date" value="' + esc(d.finished || "") + '"></div></div>' +
+    '<div class="field" id="w-rating"><span class="lbl">Rating</span><div class="rate" id="f-rate">' + [1,2,3,4,5].map(n => '<button type="button" data-r="' + n + '" aria-label="' + n + ' stars" class="' + (n <= (d.rating || 0) ? "on" : "") + '">★</button>').join("") + '</div></div>' +
+    '<details' + (d.notes || d.cover ? " open" : "") + '><summary class="hint" style="cursor:pointer">Notes and cover picture</summary><div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">' +
+      '<div class="field"><label for="f-notes">Notes</label><textarea class="inp" id="f-notes" rows="3" placeholder="Who recommended it, favorite quote, anything">' + esc(d.notes) + '</textarea></div>' +
+      '<div class="field"><label for="f-cover">Cover picture link</label><input class="inp" id="f-cover" type="url" value="' + esc(d.cover) + '" placeholder="https://…"></div></div></details>' +
+    '<div class="err" id="fErr" role="alert"></div>' +
+    '<div class="acts-row">' + (isNew ? "" : '<button class="btn danger sm" type="button" id="delBook">Delete</button><span class="spacer"></span>') + '<button class="btn ghost" type="button" data-close>Cancel</button><button class="btn primary" type="submit">' + (isNew ? "Add it" : "Save") + '</button></div>' +
+    '</form>');
+  let status = d.status, rating = d.rating || 0, picked = {cover: d.cover, olKey: d.olKey, isbn: d.isbn};
+  const syncStatus = () => {
+    $$("#f-status button").forEach(x => x.setAttribute("aria-pressed", x.dataset.s === status));
+    $("#w-started").hidden = status === "want";
+    $("#w-finished").hidden = status === "want" || status === "reading";
+    $("#l-finished").textContent = status === "dnf" ? "Stopped" : "Finished";
+    $("#w-rating").hidden = status !== "finished" && status !== "dnf";
+    if ((status === "finished" || status === "dnf") && !$("#f-finished").value) $("#f-finished").value = todayKey();
+    if (status === "reading" && !$("#f-started").value) $("#f-started").value = todayKey();
+  };
+  syncStatus();
+  $$("#f-status button").forEach(x => x.onclick = () => { status = x.dataset.s; syncStatus(); });
+  $$("#f-rate button").forEach(x => x.onclick = () => { const n = Number(x.dataset.r); rating = rating === n ? 0 : n; $$("#f-rate button").forEach(y => y.classList.toggle("on", Number(y.dataset.r) <= rating)); });
+  const doSearch = () => olSearch($("#olq").value, hit => {
+    $("#f-title").value = hit.title; $("#f-author").value = hit.author || "";
+    if (hit.pages) $("#f-pages").value = hit.pages;
+    if (hit.genre && !$("#f-genre").value) $("#f-genre").value = hit.genre;
+    picked = {cover: hit.cover || "", olKey: hit.key, isbn: hit.isbn || ""};
+    $("#f-cover").value = picked.cover;
+  });
+  $("#olGo").onclick = doSearch;
+  $("#olq").onkeydown = e => { if (e.key === "Enter"){ e.preventDefault(); doSearch(); } };
+  if (isNew) $("#olq").focus();
+  if (!isNew) $("#delBook").onclick = async () => {
+    if (!confirm("Delete “" + b.title + "” and its " + plural((b.sessions || []).length, "session") + "? This can't be undone.")) return;
+    await deleteBook(b.id); closeModal(); location.hash = "#/"; render(); toast("Deleted.");
+  };
+  $("#bookForm").onsubmit = e => {
+    e.preventDefault();
+    const err = $("#fErr");
+    const title = $("#f-title").value.trim();
+    if (!title){ err.textContent = "Give it a title."; $("#f-title").focus(); return; }
+    const started = status === "want" ? (d.started || null) : ($("#f-started").value || null);
+    const finished = status === "finished" || status === "dnf" ? ($("#f-finished").value || todayKey()) : null;
+    if (started && finished && finished < started){ err.textContent = "The finish date is before the start date."; return; }
+    const out = Object.assign({}, b || {id: uid(), sessions: [], added: new Date().toISOString(), page: 0}, {
+      title, author: $("#f-author").value.trim(), pages: Number($("#f-pages").value) > 0 ? Math.round(Number($("#f-pages").value)) : null,
+      format: $("#f-format").value, genre: $("#f-genre").value.trim(), status, started: status === "want" ? null : started, finished,
+      rating: status === "finished" || status === "dnf" ? rating : (d.rating || 0), notes: $("#f-notes").value.trim(),
+      cover: $("#f-cover").value.trim(), olKey: picked.olKey || "", isbn: picked.isbn || "",
+    });
+    if (status !== "reading" && status !== "want") out.live = null;
+    if (status === "want"){ out.live = null; }
+    closeModal();
+    saveBook(out, true);
+    if (isNew){ location.hash = "#/book/" + out.id; toast("Added “" + title + "”."); }
+    render();
+  };
+}
+
+/* Open Library lookup (free, no key; runs in the browser) */
+let olCtl = null;
+async function olSearch(q, onPick){
+  q = (q || "").trim(); const msg = $("#olMsg"), res = $("#olRes");
+  if (!q){ msg.textContent = "Type a title or author first."; return; }
+  msg.textContent = "Searching…"; res.innerHTML = "";
+  try{ if (olCtl) olCtl.abort(); }catch(e){}
+  olCtl = new AbortController();
+  const isbn = q.replace(/[-\s]/g, "");
+  const param = /^(97[89])?\d{9}[\dX]$/i.test(isbn) ? "isbn=" + isbn : "q=" + encodeURIComponent(q);
+  try{
+    const r = await fetch("https://openlibrary.org/search.json?" + param + "&limit=8&fields=key,title,author_name,cover_i,number_of_pages_median,first_publish_year,isbn,subject", {signal: olCtl.signal});
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    const hits = (j.docs || []).map(doc => ({
+      key: doc.key, title: doc.title, author: (doc.author_name || []).slice(0, 2).join(", "),
+      pages: doc.number_of_pages_median || null, year: doc.first_publish_year || "",
+      cover: doc.cover_i ? "https://covers.openlibrary.org/b/id/" + doc.cover_i + "-M.jpg" : "",
+      isbn: (doc.isbn || [])[0] || "", genre: guessGenre(doc.subject || []),
+    }));
+    if (!hits.length){ msg.textContent = "Nothing found. Try fewer words, or type it in below."; return; }
+    msg.textContent = "Tap the right one:";
+    res.innerHTML = hits.map((h, i) => '<button class="result" type="button" data-i="' + i + '">' + coverHTML(h) + '<div><b>' + esc(h.title) + '</b><span>' + esc([h.author, h.year, h.pages ? h.pages + " pages" : ""].filter(Boolean).join(" · ")) + '</span></div></button>').join("");
+    $$(".result", res).forEach(btn => btn.onclick = () => { $$(".result", res).forEach(x => x.classList.remove("picked")); btn.classList.add("picked"); onPick(hits[Number(btn.dataset.i)]); msg.textContent = "Filled in below. Check the page count against your copy."; });
+  }catch(e){
+    if (e.name === "AbortError") return;
+    msg.textContent = "Couldn't reach Open Library right now. Type it in below instead.";
+  }
+}
+function guessGenre(subjects){
+  const s = subjects.slice(0, 40).join(" | ").toLowerCase();
+  const rules = [["Graphic novel", /graphic novel|comic/], ["Children's", /juvenile|children/], ["Young adult", /young adult/], ["Science fiction", /science fiction/], ["Fantasy", /fantasy/], ["Horror", /horror/], ["Mystery", /mystery|detective/], ["Thriller", /thriller|suspense/], ["Romance", /romance|love stories/], ["Historical fiction", /historical fiction/], ["Biography", /biography/], ["Memoir", /memoir/], ["Self-help", /self-help|self-actualization/], ["Business", /business|management|economics/], ["History", /\bhistory\b/], ["Science", /science/], ["Poetry", /poetry/], ["Fiction", /fiction/]];
+  const hit = rules.find(([, re]) => re.test(s));
+  return hit ? hit[0] : "";
+}
+
+/* Reading session: stop the timer, log a past one, or change one */
+function openSessionForm(b, s, fromLive){
+  const isNew = !s;
+  const ss = sessions(b);
+  const last = ss[ss.length - 1];
+  const lastChapter = last ? last.chapter || "" : "";
+  const nextChapter = last && last.chapterDone && /^\d+$/.test(String(lastChapter).trim()) ? String(Number(lastChapter) + 1) : (last && !last.chapterDone ? lastChapter : "");
+  let d;
+  if (s) d = Object.assign({}, s);
+  else if (fromLive && b.live) d = {start: b.live.start, end: new Date().toISOString(), startPage: b.live.startPage, endPage: "", chapter: nextChapter, chapterDone: false};
+  else { const end = new Date(); end.setDate(end.getDate() - 1); end.setHours(21, 0, 0, 0); const start = new Date(end - 30 * 60000); d = {start: start.toISOString(), end: end.toISOString(), startPage: currentPage(b), endPage: "", chapter: nextChapter, chapterDone: false}; }
+  const longLive = fromLive && (Date.now() - new Date(d.start)) > 4 * 3600000;
+  modal(
+    '<h3>' + (fromLive ? "Nice reading!" : isNew ? "Log a past session" : "Reading session") + '</h3>' +
+    (fromLive ? '<div class="big-timer" data-live="' + b.id + '">' + fmtClock(Date.now() - new Date(d.start)) + '</div>' : "") +
+    (longLive ? '<p class="banner" style="margin:0">That\'s a long one. If you forgot to stop the timer, fix the end time below.</p>' : "") +
+    '<p class="hint">' + esc(b.title) + '</p>' +
+    '<form id="sessForm" novalidate style="display:flex;flex-direction:column;gap:12px">' +
+    (b.format !== "audio" ? '<div class="row2"><div class="field"><label for="s-from">Started on page</label><input class="inp num" id="s-from" type="number" min="0" inputmode="numeric" value="' + esc(d.startPage) + '"></div>' +
+      '<div class="field"><label for="s-to">' + (fromLive ? "What page are you on now?" : "Ended on page") + '</label><input class="inp num" id="s-to" type="number" min="0" inputmode="numeric" value="' + esc(d.endPage) + '"' + (b.pages ? ' max="' + b.pages + '"' : "") + '></div></div>' : "") +
+    '<div class="row2"><div class="field"><label for="s-ch">Chapter <span style="font-weight:500">(optional)</span></label><input class="inp" id="s-ch" value="' + esc(d.chapter) + '" placeholder="e.g. 3" list="chList"><datalist id="chList">' + Array.from(new Set(ss.map(x => x.chapter).filter(Boolean))).map(c => '<option value="' + esc(c) + '">').join("") + '</datalist></div>' +
+      '<div class="field" style="justify-content:flex-end"><label class="check" style="color:var(--ink);font-size:15px"><input type="checkbox" id="s-chdone"' + (d.chapterDone ? " checked" : "") + '> I finished this chapter</label></div></div>' +
+    '<details' + (fromLive && !longLive ? "" : " open") + '><summary class="hint" style="cursor:pointer">' + (fromLive ? "Change the times" : "Times") + '</summary><div class="row2" style="margin-top:10px">' +
+      '<div class="field"><label for="s-start">Started</label><input class="inp" id="s-start" type="datetime-local" value="' + toLocalInput(d.start) + '"></div>' +
+      '<div class="field"><label for="s-end">Stopped</label><input class="inp" id="s-end" type="datetime-local" value="' + toLocalInput(d.end) + '"></div></div></details>' +
+    (b.status !== "finished" ? '<label class="check" id="w-done"' + (b.pages ? " hidden" : "") + '><input type="checkbox" id="s-bookdone"> I finished the book! 🎉</label>' : "") +
+    '<div class="err" id="sErr" role="alert"></div>' +
+    '<div class="acts-row">' +
+      (fromLive ? '<button class="btn danger sm" type="button" id="sToss">Throw it away</button><span class="spacer"></span><button class="btn ghost" type="button" data-close>Keep reading</button>' :
+        (isNew ? "" : '<button class="btn danger sm" type="button" id="sDel">Delete</button><span class="spacer"></span>') + '<button class="btn ghost" type="button" data-close>Cancel</button>') +
+      '<button class="btn primary" type="submit">Save</button></div>' +
+    '</form>');
+  const to = $("#s-to"), wd = $("#w-done");
+  if (to && wd && b.pages){
+    const sync = () => { const full = Number(to.value) >= Number(b.pages); wd.hidden = !full; $("#s-bookdone").checked = full; };
+    to.oninput = sync; sync();
+  }
+  if (fromLive && to) to.focus();
+  if ($("#sToss")) $("#sToss").onclick = () => { if (!confirm("Throw away this session? The time won't be counted.")) return; b.live = null; saveBook(b); closeModal(); toast("Session thrown away."); };
+  if ($("#sDel")) $("#sDel").onclick = () => { if (!confirm("Delete this session?")) return; b.sessions = b.sessions.filter(x => x.id !== s.id); saveBook(b); closeModal(); toast("Session deleted."); };
+  $("#sessForm").onsubmit = e => {
+    e.preventDefault();
+    const err = $("#sErr");
+    const start = fromLocalInput($("#s-start").value), end = fromLocalInput($("#s-end").value);
+    if (!start || !end){ err.textContent = "Fill in both times."; return; }
+    if (new Date(end) <= new Date(start)){ err.textContent = "The stop time has to be after the start time."; return; }
+    if (new Date(end) - new Date(start) > 24 * 3600000){ err.textContent = "A session can't be longer than a day. Check the times."; return; }
+    const from = $("#s-from") ? $("#s-from").value.trim() : "", toV = $("#s-to") ? $("#s-to").value.trim() : "";
+    if (from !== "" && toV !== "" && Number(toV) < Number(from)){ err.textContent = "The end page is before the start page."; return; }
+    if (b.pages && toV !== "" && Number(toV) > Number(b.pages)){ err.textContent = "This book has " + b.pages + " pages."; return; }
+    const clash = state.books.flatMap(x => (x.sessions || []).map(y => ({x, y}))).find(o => (!s || o.y.id !== s.id) && new Date(o.y.start) < new Date(end) && new Date(o.y.end) > new Date(start));
+    if (clash){ err.textContent = "That overlaps another session (" + clash.x.title + ", " + fmtDay(dayKey(clash.y.start)) + " " + fmtTime(clash.y.start) + " – " + fmtTime(clash.y.end) + "). Change the times."; return; }
+    const rec = {id: s ? s.id : uid(), start, end, startPage: from === "" ? null : Number(from), endPage: toV === "" ? null : Number(toV), chapter: $("#s-ch").value.trim(), chapterDone: $("#s-chdone").checked};
+    b.sessions = (b.sessions || []).filter(x => x.id !== rec.id).concat(rec);
+    if (fromLive) b.live = null;
+    if (!b.started || dayKey(start) < b.started) b.started = dayKey(start);
+    if (b.status === "want") b.status = "reading";
+    const doneBook = $("#s-bookdone") && $("#s-bookdone").checked;
+    closeModal();
+    if (doneBook){ b.status = "finished"; b.finished = dayKey(end); saveBook(b); openFinish(b, true); return; }
+    saveBook(b);
+    toast(fromLive ? "Saved: " + fmtDur(sessMin(rec)) + (sessPages(rec) ? ", " + plural(sessPages(rec), "page") : "") + "." : "Session saved.");
+  };
+}
+
+/* Finished a book */
+function openFinish(b, already){
+  const st = bookStats(b);
+  let rating = b.rating || 0;
+  modal('<h3>' + (already ? "You finished it! 🎉" : "Finished “" + esc(b.title) + "”?") + '</h3>' +
+    (already ? '<p><b>' + esc(b.title) + '</b> took ' + plural(daysBetween(b.started || b.finished, b.finished) + 1, "day") + (st.minutes ? " and " + fmtDur(st.minutes) + " of reading" : "") + '.</p>' :
+      '<div class="field"><label for="fin-day">Finished on</label><input class="inp" id="fin-day" type="date" value="' + todayKey() + '"></div>') +
+    '<div class="field"><span class="lbl">How was it?</span><div class="rate" id="fin-rate">' + [1,2,3,4,5].map(n => '<button type="button" data-r="' + n + '" class="' + (n <= rating ? "on" : "") + '" aria-label="' + n + ' stars">★</button>').join("") + '</div></div>' +
+    '<div class="acts-row"><button class="btn ghost" type="button" data-close>' + (already ? "Skip" : "Not yet") + '</button><button class="btn primary" type="button" id="finGo">' + (already ? "Save rating" : "Mark finished") + '</button></div>');
+  $$("#fin-rate button").forEach(x => x.onclick = () => { const n = Number(x.dataset.r); rating = rating === n ? 0 : n; $$("#fin-rate button").forEach(y => y.classList.toggle("on", Number(y.dataset.r) <= rating)); });
+  $("#finGo").onclick = () => {
+    if (!already){
+      const day = $("#fin-day").value || todayKey();
+      if (b.started && day < b.started){ toast("That's before you started it."); return; }
+      b.status = "finished"; b.finished = day; b.live = null;
+      if (!b.started) b.started = day;
+    }
+    b.rating = rating;
+    saveBook(b); closeModal();
+    toast("Added to your " + b.finished.slice(0, 4) + " shelf.");
+  };
+}
+
+/* ============================================================
+   Year in review: tap-through cards
+   ============================================================ */
+let story = null;
+function buildCards(Y){
+  const s = yearStats(Y), cards = [];
+  const name = state.session ? (state.session.user.email || "").replace(KIDS_DOMAIN, "").split("@")[0] : "";
+  const years = yearsWithData();
+  const fan = list => '<div class="fan">' + list.slice(-7).map((b, i, a) => coverHTML(b, "transform:rotate(" + ((i - (a.length - 1) / 2) * 7) + "deg) translateY(" + Math.abs(i - (a.length - 1) / 2) * 6 + "px)")).join("") + '</div>';
+  const isNow = Y === new Date().getFullYear();
+
+  cards.push({bg: "linear-gradient(160deg,#FF6FA8,#A07BE0)", html:
+    '<span class="eyebrow">The Library · Year in review</span><h2>' + (name ? esc(name) + "'s " : "Your ") + Y + ' in books</h2>' +
+    (s.fin.length ? fan(s.fin) : "") +
+    '<p>' + (isNow ? "So far this year. It keeps updating until December 31." : "Here's how it went.") + '</p>' +
+    (years.length > 1 ? '<div class="yearpick" data-noadvance>' + years.map(y => '<button type="button" data-year="' + y + '" aria-pressed="' + (y === Y) + '">' + y + '</button>').join("") + '</div>' : "")});
+
+  if (!s.fin.length && !s.sess.length){
+    cards.push({bg: "#FFC628", html: '<span class="eyebrow">' + Y + '</span><h2>Nothing logged for ' + Y + ' yet</h2><p>Finish a book or time a reading session, and your year in review fills itself in.</p>'});
+    return cards;
+  }
+  if (s.fin.length) cards.push({bg: "#FFC628", html:
+    '<span class="eyebrow">Books finished</span><div class="huge" data-count="' + s.fin.length + '">' + s.fin.length + '</div>' +
+    '<h2>' + (s.fin.length === 1 ? "book, start to finish." : "books, start to finish.") + '</h2>' +
+    '<p>' + (s.started.length ? "You started " + plural(s.started.length, "book") + " this year" + (s.dnf.length ? " and set " + s.dnf.length + " aside" : "") + "." : "") + '</p>' +
+    (s.fin[0] ? '<p class="note">First one: ' + esc(s.fin[0].title) + ' (' + fmtDay(s.fin[0].finished) + ')' + (s.fin.length > 1 ? '. Latest: ' + esc(s.fin[s.fin.length - 1].title) + '.' : '.') + '</p>' : "")});
+  if (s.pagesFin) cards.push({bg: "#3DBA70", html:
+    '<span class="eyebrow">Pages</span><div class="huge" data-count="' + s.pagesFin + '">' + s.pagesFin.toLocaleString() + '</div><h2>pages turned.</h2>' +
+    '<p>Stacked up, that\'s a pile of paper about ' + stackText(s.pagesFin) + ' tall.</p>' +
+    (s.fin.length > 1 ? '<p class="note">That\'s ' + Math.round(s.pagesFin / s.fin.length) + ' pages per book on average.</p>' : "")});
+  if (s.minutes >= 1) cards.push({bg: "#5B9BF0", html:
+    '<span class="eyebrow">Time spent reading</span><div class="huge" data-count="' + Math.round(s.minutes / 60 * 10) / 10 + '">' + fmtHours(s.minutes) + '<small>hours</small></div>' +
+    '<h2>over ' + plural(s.sess.length, "session") + '.</h2>' +
+    '<p>Your average sit-down was ' + fmtDur(s.minutes / s.sess.length) + '.' + (s.longSess ? ' The longest: ' + fmtDur(sessMin(s.longSess.s)) + ' with ' + esc(s.longSess.b.title) + ' on ' + fmtDay(dayKey(s.longSess.s.start)) + '.' : '') + '</p>'});
+  if (s.pph) cards.push({bg: "#FF8A4D", html:
+    '<span class="eyebrow">Reading speed</span><div class="huge" data-count="' + Math.round(s.pph) + '">' + Math.round(s.pph) + '</div><h2>pages an hour.</h2>' +
+    '<p>At that pace, a 300-page book takes about ' + fmtDur(300 / s.pph * 60) + '.</p>' +
+    (s.sessPg ? '<p class="note">Measured from ' + plural(s.sessPg, "page") + ' you timed.</p>' : "")});
+  if (s.topMonth != null && s.fin.length > 1){
+    const max = Math.max(...s.byMonth, 1);
+    cards.push({bg: "#A07BE0", html:
+      '<span class="eyebrow">Your big month</span><h2>' + MONTHS_LONG[s.topMonth] + '</h2>' +
+      '<p>' + plural(s.byMonth[s.topMonth], "book") + ' finished' + (s.topMinMonth != null && s.minByMonth[s.topMinMonth] ? (s.topMinMonth === s.topMonth ? ", and your most reading time too (" + fmtDur(s.minByMonth[s.topMinMonth]) + ")." : ". Most time reading: " + MONTHS_LONG[s.topMinMonth] + " (" + fmtDur(s.minByMonth[s.topMinMonth]) + ").") : ".") + '</p>' +
+      '<div class="months">' + s.byMonth.map((n, i) => '<div class="' + (i === s.topMonth ? "top" : "") + '"><span>' + (n || "") + '</span><i style="height:' + Math.max(3, Math.round(n / max * 110)) + 'px;animation-delay:' + i * 0.04 + 's"></i><span>' + MONTHS[i][0] + '</span></div>').join("") + '</div>'});
+  }
+  if (s.fastest || s.longest){
+    let h = '<span class="eyebrow">Records</span><h2>Fastest and biggest</h2>';
+    if (s.fastest) h += '<div class="pair">' + coverHTML(s.fastest.b) + '<div class="t"><span>Fastest read</span><b>' + esc(s.fastest.b.title) + '</b><span>' + plural(s.fastest.days, "day") + (s.fastest.b.pages ? " · " + s.fastest.b.pages + " pages" : "") + '</span></div></div>';
+    if (s.longest && (!s.fastest || s.longest.id !== s.fastest.b.id || s.fin.length === 1)) h += '<div class="pair">' + coverHTML(s.longest) + '<div class="t"><span>Biggest book</span><b>' + esc(s.longest.title) + '</b><span>' + Number(s.longest.pages).toLocaleString() + ' pages</span></div></div>';
+    if (s.avgDays) h += '<p class="note">On average a book took you ' + plural(Math.round(s.avgDays), "day") + '.</p>';
+    cards.push({bg: "#FF6FA8", html: h});
+  }
+  if (s.streak.days >= 2 || s.sess.length >= 3){
+    const dowMax = s.dow.indexOf(Math.max(...s.dow));
+    const todMax = Object.entries(s.tod).sort((a, b) => b[1] - a[1])[0][0];
+    const todText = {morning: "a morning reader", afternoon: "an afternoon reader", evening: "an evening reader", night: "a night owl"}[todMax];
+    cards.push({bg: "#FFC628", html:
+      '<span class="eyebrow">Your reading habits</span>' +
+      (s.streak.days >= 2 ? '<div class="huge" data-count="' + s.streak.days + '">' + s.streak.days + '<small>days</small></div><h2>in a row: your longest streak.</h2><p>' + fmtDay(s.streak.start) + ' to ' + fmtDay(s.streak.end) + '.</p>' : '<h2>' + plural(s.dayset.size, "day") + ' with a book open</h2>') +
+      '<p>You\'re ' + todText + ', and ' + DAYS_LONG[dowMax] + 's were your big reading day.</p>' +
+      (s.dayset.size ? '<p class="note">' + plural(s.dayset.size, "day") + ' with a reading session this year.</p>' : "")});
+  }
+  if ((s.authors[0] && s.authors[0][1] > 1) || s.genres[0]){
+    let h = '<span class="eyebrow">Your favorites</span>';
+    if (s.authors[0] && s.authors[0][1] > 1) h += '<h2>' + esc(s.authors[0][0]) + '</h2><p>was your go-to author: ' + plural(s.authors[0][1], "book") + ' this year.</p>';
+    if (s.genres[0]) h += (s.authors[0] && s.authors[0][1] > 1 ? '<p style="margin-top:14px">' : '<h2>' + esc(s.genres[0][0]) + '</h2><p>') + (s.authors[0] && s.authors[0][1] > 1 ? 'Favorite genre: <b>' + esc(s.genres[0][0]) + '</b> (' + plural(s.genres[0][1], "book") + ')' : 'was your favorite genre: ' + plural(s.genres[0][1], "book")) + (s.genres.length > 1 ? ", out of " + plural(s.genres.length, "genre") + " you tried" : "") + '.</p>';
+    cards.push({bg: "#3DBA70", html: h});
+  }
+  if (s.rated.length){
+    const top = s.rated.filter(b => b.rating === s.rated[0].rating).slice(0, 3);
+    cards.push({bg: "#5B9BF0", html:
+      '<span class="eyebrow">Top rated</span><h2>' + (top.length > 1 ? "Your favorites" : "Your favorite") + '</h2>' +
+      top.map(b => '<div class="pair">' + coverHTML(b) + '<div class="t"><b>' + esc(b.title) + '</b><span>' + esc(b.author || "") + '</span><div class="stars" style="color:#17201A;font-size:18px">' + "★".repeat(b.rating) + '</div></div></div>').join("")});
+  }
+  // Summary
+  cards.push({bg: "linear-gradient(160deg,#A07BE0,#FF6FA8)", html:
+    '<span class="eyebrow">' + (name ? esc(name) + "'s " : "") + Y + ' in books</span>' +
+    (s.fin.length ? '<div class="wall">' + s.fin.slice(0, 18).map(b => coverHTML(b)).join("") + '</div>' : "") +
+    '<div class="summary">' +
+      '<div><b>' + s.fin.length + '</b><span>books finished</span></div>' +
+      '<div><b>' + s.pagesFin.toLocaleString() + '</b><span>pages</span></div>' +
+      (s.minutes ? '<div><b>' + fmtHours(s.minutes) + ' h</b><span>reading</span></div>' : "") +
+      (s.pph ? '<div><b>' + Math.round(s.pph) + '</b><span>pages an hour</span></div>' : "") +
+      (s.streak.days >= 2 ? '<div><b>' + s.streak.days + ' days</b><span>longest streak</span></div>' : "") +
+      (s.rated[0] ? '<div><b style="font-size:18px">' + esc(s.rated[0].title) + '</b><span>top rated</span></div>' : "") +
+    '</div>' +
+    '<a class="btn" href="#/review/' + Y + '/all" data-noadvance style="background:#FFF8EC;color:#17201A">See it all ▸</a>'});
+  return cards;
+}
+function stackText(pages){
+  const inches = pages * 0.0035; // paperback paper, roughly
+  if (inches < 12) return (Math.round(inches * 10) / 10) + " inches";
+  const ft = inches / 12;
+  return (Math.round(ft * 10) / 10) + " feet";
+}
+function openStory(Y){
+  if (story && story.Y === Y){ return; }
+  const cards = buildCards(Y);
+  story = {Y, cards, i: 0};
+  const root = $("#storyRoot");
+  root.innerHTML = '<div class="story" role="dialog" aria-modal="true" aria-label="Year in review ' + Y + '"><div class="story-frame" id="sf">' +
+    '<div class="bars">' + cards.map(() => "<i></i>").join("") + '</div>' +
+    '<button class="story-all" type="button" id="stAll">See it all</button>' +
+    '<button class="story-x" type="button" id="stX" aria-label="Close">✕</button>' +
+    '<div id="stCard"></div>' +
+    '<button class="tapzone prev" type="button" aria-label="Back" id="stPrev"></button><button class="tapzone next" type="button" aria-label="Next" id="stNext"></button>' +
+  '</div></div>';
+  document.body.style.overflow = "hidden";
+  $("#stX").onclick = () => { location.hash = "#/"; };
+  $("#stAll").onclick = () => { location.hash = "#/review/" + Y + "/all"; };
+  $("#stPrev").onclick = () => storyGo(-1);
+  $("#stNext").onclick = () => storyGo(1);
+  document.addEventListener("keydown", storyKeys);
+  showCard();
+}
+function storyKeys(e){
+  if (!story) return;
+  if (e.key === "ArrowRight" || e.key === " "){ e.preventDefault(); storyGo(1); }
+  else if (e.key === "ArrowLeft"){ storyGo(-1); }
+  else if (e.key === "Escape"){ location.hash = "#/"; }
+}
+function storyGo(d){
+  if (!story) return;
+  const n = story.i + d;
+  if (n < 0) return;
+  if (n >= story.cards.length){ location.hash = "#/review/" + story.Y + "/all"; return; }
+  story.i = n; showCard();
+}
+function showCard(){
+  const c = story.cards[story.i];
+  $$(".bars i").forEach((el, i) => { el.className = i < story.i ? "done" : i === story.i ? "cur" : ""; });
+  const holder = $("#stCard");
+  holder.innerHTML = '<div class="card rise" style="--cbg:' + c.bg + '">' + c.html + (story.i === 0 ? '<div class="tapnote">Tap to keep going ▸</div>' : "") + '</div>';
+  // Buttons inside a card sit above the tap zones.
+  $$("[data-noadvance], .card a, .card button", holder).forEach(el => { el.style.position = "relative"; el.style.zIndex = 6; });
+  $$("[data-year]", holder).forEach(btn => btn.onclick = () => { location.hash = "#/review/" + btn.dataset.year; });
+  $$("[data-count]", holder).forEach(countUp);
+}
+function countUp(el){
+  const target = Number(el.dataset.count); if (!isFinite(target) || target <= 0) return;
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const small = el.querySelector("small"); const tail = small ? small.outerHTML : "";
+  const dec = target % 1 ? 1 : 0, t0 = performance.now(), dur = 900;
+  const step = now => {
+    const p = Math.min(1, (now - t0) / dur), v = target * (1 - Math.pow(1 - p, 3));
+    el.innerHTML = (dec ? (Math.round(v * 10) / 10).toLocaleString() : Math.round(v).toLocaleString()) + tail;
+    if (p < 1 && document.contains(el)) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function closeStory(){
+  if (!story) return;
+  story = null; $("#storyRoot").innerHTML = ""; document.body.style.overflow = "";
+  document.removeEventListener("keydown", storyKeys);
+}
+
+/* ---------- year in review: see it all ---------- */
+function renderYearAll(main, Y){
+  const s = yearStats(Y), years = yearsWithData();
+  let html = '<a class="btn ghost back" href="#/">← The shelf</a>';
+  html += '<div class="yr-head"><h2>' + Y + ' in books</h2><div style="display:flex;gap:10px;flex-wrap:wrap">' +
+    (years.length > 1 ? '<select class="inp" id="yrPick" style="width:auto" aria-label="Year">' + years.map(y => '<option' + (y === Y ? " selected" : "") + '>' + y + '</option>').join("") + '</select>' : "") +
+    '<a class="btn gold" href="#/review/' + Y + '">▶ Play the cards</a></div></div>';
+  html += '<div class="strip" style="margin-top:18px">' +
+    tile("Books finished", s.fin.length, s.started.length ? plural(s.started.length, "started", "started") + (s.dnf.length ? " · " + s.dnf.length + " set aside" : "") : "") +
+    tile("Pages", s.pagesFin.toLocaleString(), s.fin.length ? Math.round(s.pagesFin / s.fin.length) + " per book" : "") +
+    tile("Time reading", s.minutes ? fmtHours(s.minutes) + "<small> h</small>" : "–", s.sess.length ? plural(s.sess.length, "session") + " · avg " + fmtDur(s.minutes / s.sess.length) : "no timed sessions") +
+    tile("Speed", s.pph ? Math.round(s.pph) + "<small> pages/h</small>" : "–", s.pph ? "from timed sessions" : "needs pages on sessions") +
+    tile("Avg days per book", s.avgDays ? Math.round(s.avgDays) : "–", "start to finish") +
+    tile("Longest streak", s.streak.days ? s.streak.days + "<small> days</small>" : "–", s.streak.days > 1 ? fmtDay(s.streak.start) + " – " + fmtDay(s.streak.end) : "") +
+  '</div>';
+  const maxB = Math.max(...s.byMonth, 1), maxM = Math.max(...s.minByMonth, 1);
+  html += '<div class="two" style="margin-top:22px">' +
+    '<div class="panel"><h3 style="font-size:20px">Books finished by month</h3><div class="chart">' + s.byMonth.map((n, i) => '<div class="col"><b>' + (n || "") + '</b><i style="height:' + Math.round(n / maxB * 140) + 'px"></i><span>' + MONTHS[i] + '</span></div>').join("") + '</div></div>' +
+    '<div class="panel"><h3 style="font-size:20px">Hours reading by month</h3><div class="chart">' + s.minByMonth.map((m, i) => '<div class="col"><b>' + (m ? fmtHours(m) : "") + '</b><i style="height:' + Math.round(m / maxM * 140) + 'px;background:var(--blue)"></i><span>' + MONTHS[i] + '</span></div>').join("") + '</div></div>' +
+  '</div>';
+  const hl = [];
+  if (s.fastest) hl.push(['Fastest read', s.fastest.b, plural(s.fastest.days, "day")]);
+  if (s.slowest && s.slowest !== s.fastest) hl.push(['Took the longest', s.slowest.b, plural(s.slowest.days, "day")]);
+  if (s.longest) hl.push(['Biggest book', s.longest, Number(s.longest.pages).toLocaleString() + " pages"]);
+  if (s.shortest && s.shortest !== s.longest) hl.push(['Shortest book', s.shortest, Number(s.shortest.pages).toLocaleString() + " pages"]);
+  if (s.mostTime) hl.push(['Most time with', s.mostTime[0], fmtDur(s.mostTime[1])]);
+  if (s.rated[0]) hl.push(['Top rated', s.rated[0], "★".repeat(s.rated[0].rating)]);
+  const favs = [];
+  if (s.authors.length) favs.push(["Top authors", s.authors.slice(0, 5)]);
+  if (s.genres.length) favs.push(["Genres", s.genres.slice(0, 6)]);
+  const fm = s.formats.filter(f => f[0]);
+  if (fm.length > 1) favs.push(["Formats", fm.map(([k, n]) => [FORMATS[k] || k, n])]);
+  html += '<div class="two" style="margin-top:22px">' +
+    '<div class="panel"><h3 style="font-size:20px;margin-bottom:6px">Highlights</h3>' + (hl.length ? hl.map(([k, b, v]) => '<a class="hl" href="#/book/' + b.id + '" style="text-decoration:none">' + coverHTML(b) + '<div><div class="k">' + k + '</div><b>' + esc(b.title) + '</b><span>' + esc(v) + '</span></div></a>').join("") : '<p class="hint">Finish a book to see highlights.</p>') + '</div>' +
+    '<div class="panel"><h3 style="font-size:20px;margin-bottom:10px">Favorites</h3>' + (favs.length ? favs.map(([t, list]) => '<p class="hint" style="margin:10px 0 6px;font-weight:700">' + t + '</p><div style="display:flex;gap:6px;flex-wrap:wrap">' + list.map(([n, c]) => '<span class="chip pink">' + esc(n) + ' · ' + c + '</span>').join("") + '</div>').join("") : '<p class="hint">Add authors and genres to your books to see favorites.</p>') +
+      (s.sess.length ? '<p class="hint" style="margin:16px 0 6px;font-weight:700">When you read</p><div style="display:flex;gap:6px;flex-wrap:wrap">' + Object.entries(s.tod).filter(x => x[1]).sort((a, b) => b[1] - a[1]).map(([k, m]) => '<span class="chip">' + k + ' · ' + fmtDur(m) + '</span>').join("") + '</div>' : "") +
+    '</div></div>';
+  html += '<div class="sec-h"><h2>Every book from ' + Y + '</h2><span class="sub">in the order you finished them</span></div>';
+  if (s.fin.length){
+    html += '<div class="panel tablewrap"><table class="list"><thead><tr><th>#</th><th>Book</th><th>Finished</th><th class="r">Days</th><th class="r">Pages</th><th class="r">Time</th><th>Rating</th></tr></thead><tbody>' +
+      s.fin.map((b, i) => { const st = bookStats(b); return '<tr class="click" data-go="' + b.id + '"><td class="num">' + (i + 1) + '</td><td><b>' + esc(b.title) + '</b>' + (b.author ? '<br><span class="hint">' + esc(b.author) + '</span>' : "") + '</td><td>' + fmtDay(b.finished) + '</td><td class="r num">' + (st.days || "–") + '</td><td class="r num">' + (b.pages || "–") + '</td><td class="r num">' + (st.minutes ? fmtDur(st.minutes) : "–") + '</td><td class="stars">' + stars(b.rating) + '</td></tr>'; }).join("") +
+      '</tbody></table></div>';
+  } else html += '<div class="empty">No finished books in ' + Y + '.</div>';
+  main.innerHTML = html;
+  if ($("#yrPick")) $("#yrPick").onchange = e => { location.hash = "#/review/" + e.target.value + "/all"; };
+  $$("[data-go]", main).forEach(tr => tr.onclick = () => { location.hash = "#/book/" + tr.dataset.go; });
+  window.scrollTo(0, 0);
+}
+
+init();
+</script>
+</body>
+</html>
