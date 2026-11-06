@@ -107,6 +107,8 @@ h1,h2,h3,h4{font-family:var(--display);margin:0;letter-spacing:-.02em;text-wrap:
 .seg button .c{font-family:var(--mono);font-size:12px;opacity:.8;margin-left:4px}
 .inp,select.inp{width:100%;padding:10px 12px;border:2px solid var(--line);border-radius:10px;background:var(--bg);min-width:0}
 .inp:focus{border-color:var(--library);outline:none}
+select.inp{appearance:none;-webkit-appearance:none;padding-right:40px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23A3AEA5' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:14px}
+select.inp:hover{border-color:var(--muted)}
 .searchbox{flex:1 1 200px;max-width:320px}
 
 .shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:22px 18px;margin-top:18px}
